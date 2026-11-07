@@ -1919,7 +1919,7 @@ function getFbConfig(){
 function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load failed: '+src)); document.head.appendChild(s); }); }
 
 /* =====================================================================
-   同期ストア（Firebase Realtime Database / なければ同じPC内のタブ間同期）
+   同期ストア（Firebase Cloud Firestore / なければ同じPC内のタブ間同期）
    ===================================================================== */
 const DEFAULT_STATE = () => ({
   meta:{ name:'' }, qs:[], cur:0, shown:-1, showAns:false, hist:[], ann:{},
@@ -1954,16 +1954,22 @@ class Store {
   status(){ return this.mode === 'firebase' ? (this.connected ? 'online' : 'offline') : 'local'; }
   async connect(){
     const cfg = getFbConfig();
-    if(cfg && cfg.databaseURL){
+    if(cfg && cfg.projectId){
       try{
         await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
-        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
         const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
-        this.db = app.database();
-        this.ref = this.db.ref('qdisp/rooms/' + this.room);
+        const fs = app.firestore();
+        // Firestore：コレクション qd_rooms に 1ルームあたり3つの文書（進行状態／問題／ルビ）
+        const col = fs.collection('qd_rooms');
+        this.docs = { st: col.doc(this.room), qs: col.doc(this.room + '_qs'), ann: col.doc(this.room + '_ann') };
+        this.parts = { st: {}, qs: [], ann: {} };
         this.mode = 'firebase';
-        this.db.ref('.info/connected').on('value', snap => { this.connected = !!snap.val(); this.emit(); });
-        this.ref.on('value', snap => { this.s = normalize(snap.val()); this.emit(); }, err => { console.error(err); toast('Firebase の読み込みに失敗：' + err.code); });
+        const compose = () => { this.s = normalize(Object.assign({}, this.parts.st, { qs: this.parts.qs, ann: this.parts.ann })); this.emit(); };
+        const onErr = err => { console.error(err); toast('Firebase の読み込みに失敗：' + err.code); };
+        this.docs.st.onSnapshot({ includeMetadataChanges: true }, snap => { this.connected = !snap.metadata.fromCache; this.parts.st = snap.data() || {}; compose(); }, onErr);
+        this.docs.qs.onSnapshot(snap => { this.parts.qs = (snap.data() || {}).qs || []; compose(); }, onErr);
+        this.docs.ann.onSnapshot(snap => { this.parts.ann = (snap.data() || {}).ann || {}; compose(); }, onErr);
         return;
       }catch(e){ console.error(e); toast('Firebase に接続できません。同じPC内のみで動作します'); }
     }
@@ -1978,9 +1984,20 @@ class Store {
     for(const p in patch) setPath(this.s, p, clean(patch[p]));
     this.s = normalize(this.s);
     if(this.mode === 'firebase'){
-      const fp = {}; for(const p in patch) fp[p] = clean(patch[p]);
-      fp['meta/updated'] = Date.now();
-      this.ref.update(fp).catch(e => toast('保存に失敗：' + e.code));
+      const st = { meta: { updated: Date.now() } }, ann = {}; let hasAnn = false;
+      const fail = e => toast('保存に失敗：' + (e.code || e.message));
+      for(const p in patch){
+        const v = clean(patch[p]), top = p.split('/')[0];
+        if(p === 'qs'){
+          if(JSON.stringify(v).length > 900000) toast('問題が多すぎて保存できない可能性があります（2つに分けてください）');
+          this.docs.qs.set({ qs: v }).catch(fail);
+        }
+        else if(p === 'ann') this.docs.ann.set({ ann: v || {} }).catch(fail);
+        else if(top === 'ann'){ setPath(ann, p, v); hasAnn = true; }
+        else setPath(st, p, v);
+      }
+      this.docs.st.set(st, { merge: true }).catch(fail);
+      if(hasAnn) this.docs.ann.set(ann, { merge: true }).catch(fail);
     }else{
       LS.set(this.key, this.s);
       if(this.bc) this.bc.postMessage(1);
@@ -2567,7 +2584,7 @@ function openSettings(){
       if(!t){ if(old !== 'null'){ localStorage.removeItem('qd:fb'); toast('Firebase 設定を消しました。再読み込みします'); setTimeout(() => location.reload(), 800); } }
       else{
         const c = parseFbConfig(t);
-        if(!c || !c.databaseURL){ toast('Firebase 設定を読み取れません（databaseURL が必要です）'); return; }
+        if(!c || !c.projectId){ toast('Firebase 設定を読み取れません（projectId が必要です）'); return; }
         if(JSON.stringify(c) !== old){ LS.set('qd:fb', c); toast('Firebase に接続します…'); setTimeout(() => location.reload(), 800); }
       }
     }
