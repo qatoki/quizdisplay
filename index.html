@@ -57,7 +57,7 @@ ruby rt{font-size:.5em;font-weight:400}
 /* ---------- 操作画面 ---------- */
 #op{display:grid;grid-template-rows:auto 1fr;height:100vh}
 .topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
-.topbar h1{font-size:17px;margin:0 8px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
+.topbar h1{cursor:pointer;font-size:17px;margin:0 8px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
 .pill{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--sub);white-space:nowrap}
 .pill.on{background:#e3f5ea;color:#1b8a4b}
 .pill.off{background:#fdeee6;color:#c2410c}
@@ -217,7 +217,7 @@ body.mview{background:var(--bg);overflow-x:hidden}
 <!-- ======================= 操作画面 ======================= -->
 <div id="op" class="hidden">
   <div class="topbar">
-    <h1 id="opTitle">問題表示</h1>
+    <h1 id="opTitle" title="クリックで問題集の名前を変更">問題表示</h1><button class="ghost small" id="btnRename" title="問題集の名前を変更">✎</button>
     <span class="pill" id="opRoom">ルーム</span>
     <span class="pill" id="opConn">接続中…</span>
     <span class="pill hidden" id="dictPill"></span>
@@ -1981,7 +1981,7 @@ function liveEntry(s, e){
   if(!e) return null;
   if(e.setId === (s.meta.setId || '')){
     const q = s.qs.find(x => x.id === e.qid);
-    if(q){ const an = annOf(s, q.id); return Object.assign({}, e, { no: q.no, q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', ann: { q: an.q, a: an.a } }); }
+    if(q){ const an = annOf(s, q.id); return Object.assign({}, e, { set: s.meta.name || e.set, no: q.no, q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', ann: { q: an.q, a: an.a } }); }
   }
   return Object.assign({ ann: { q: [], a: [] } }, e, { ann: { q: toArr(e.ann && e.ann.q), a: toArr(e.ann && e.ann.a) } });
 }
@@ -2371,6 +2371,7 @@ async function initOp(){
 
   $('#btnOpenScreen').onclick = () => window.open(viewUrl('screen', room, true), 'qd-screen-' + room, 'width=1280,height=720');
   $('#btnPaste').onclick = openPaste;
+  $('#btnRename').onclick = $('#opTitle').onclick = openRename;
   $('#btnEdit').onclick = () => openEditor(Math.min(store.s.cur, store.s.qs.length - 1));
   $('#btnEditQ').onclick = () => openEditor(store.s.cur);
   $('#btnSettings').onclick = openSettings;
@@ -2687,10 +2688,26 @@ function openPaste(){
   };
 }
 
+/* ---------- 問題集の名前 ---------- */
+function openRename(){
+  const s = store.s;
+  const m = modal(`<h2>問題集の名前</h2>
+    <div class="field"><input type="text" id="rnName" value="${esc(s.meta.name)}" placeholder="例：第3回 埼玉オープン 予選"></div>
+    <div class="muted small">投影画面・スマホ・読んだ問題の履歴（この問題集の分）の表示も変わります。</div>
+    <div class="foot"><button id="rnCancel">キャンセル</button><button class="primary" id="rnOk">保存</button></div>`, 'sm');
+  const inp = m.querySelector('#rnName');
+  setTimeout(() => { inp.focus(); inp.select(); }, 50);
+  const ok = () => { store.update({ 'meta/name': inp.value.trim() }); closeModal(); toast('名前を変更しました'); };
+  m.querySelector('#rnOk').onclick = ok;
+  m.querySelector('#rnCancel').onclick = closeModal;
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); ok(); } });
+}
+
 /* ---------- 問題の追加・編集 ---------- */
 function openEditor(startIdx){
   let sel = -1, insertAt = -1, filter = '';
   const m = modal(`<h2>問題の追加・編集</h2>
+    <div class="field" style="display:flex;gap:8px;align-items:center"><span class="lab" style="margin:0;white-space:nowrap">問題集の名前</span><input type="text" id="edSetName" value="${esc(store.s.meta.name)}"><button id="edSetSave" style="white-space:nowrap">名前を保存</button></div>
     <div class="edgrid">
       <div class="edleft">
         <input type="text" id="edSearch" placeholder="番号・問題文・答えで絞り込み">
@@ -2786,6 +2803,9 @@ function openEditor(startIdx){
     load(idx);
   };
   $m('#edClose').onclick = closeModal;
+  const saveName = () => { store.update({ 'meta/name': $m('#edSetName').value.trim() }); toast('名前を変更しました'); };
+  $m('#edSetSave').onclick = saveName;
+  $m('#edSetName').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); saveName(); } });
   if(store.s.qs.length && startIdx >= 0) load(Math.min(startIdx, store.s.qs.length - 1)); else startNew(store.s.qs.length);
 }
 
