@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>問題表示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<script>
+/* =====================================================================
+   設定（必要に応じて書き換えてください）
+   ===================================================================== */
+// Firebase の設定。Firebase コンソールの「SDK の設定と構成」に出る
+// const firebaseConfig = { ... } の { } の中身をここに貼ります。
+// 空(null)のままでも、操作画面の「設定」から貼り付けて使えます。
+const FIREBASE_CONFIG = null;
+
+// ④ 早押しストックの URL（自分用スマホ画面の保存先）
+const STOCK_URL = 'https://claude.ai/artifact/HUPyHj7BJFeaDshtyS8Z8d';
+</script>
+<style>
+:root{
+  --font:'BIZ UDGothic','BIZ UDゴシック','BIZ UDPGothic',sans-serif;
+  --bg:#f4f5f7; --panel:#fff; --ink:#1d2330; --sub:#5b6475; --line:#dde1e8;
+  --accent:#1f5fd1; --accent-soft:#e7efff; --ok:#1b8a4b; --warn:#c2410c; --ans:#b45309;
+  --field:#fff; --soft:#f5f6f8; --rowline:#f0f1f4;
+}
+body.dark{
+  --bg:#12151b; --panel:#1b2029; --ink:#e7eaf0; --sub:#9aa3b3; --line:#323a48;
+  --accent:#4b86f0; --accent-soft:#1f2e4a; --ok:#3fbf75; --warn:#f08a5d; --ans:#f5b950;
+  --field:#11151c; --soft:#232a35; --rowline:#262d39;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font-family:var(--font);font-size:15px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 14px}
+button:hover{border-color:#b9c0cc}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.primary:hover{filter:brightness(1.08)}
+button.ghost{background:transparent;border-color:transparent;color:var(--sub)}
+button.danger{color:var(--warn)}
+button:disabled{opacity:.45;cursor:default}
+input[type=text],input[type=url],textarea,select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--field);color:var(--ink);width:100%}
+textarea{resize:vertical}
+label.chk{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.hidden{display:none!important}
+.muted{color:var(--sub)}
+.small{font-size:13px}
+.qtext{white-space:pre-wrap;word-break:break-word;line-break:strict}
+ruby rt{font-size:.5em;font-weight:400}
+.ann{border-radius:3px;white-space:nowrap}
+.ann.has-link{text-decoration:underline dotted 2px;text-underline-offset:.28em}
+
+/* ---------- 操作画面 ---------- */
+#op{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.topbar h1{font-size:17px;margin:0 8px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
+.pill{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--sub);white-space:nowrap}
+.pill.on{background:#e3f5ea;color:#1b8a4b}
+.pill.off{background:#fdeee6;color:#c2410c}
+body.dark .pill.on{background:#173a27;color:#6fdc9d}
+body.dark .pill.off{background:#45261a;color:#f6a27e}
+.spacer{flex:1}
+.opmain{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:16px;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.next{display:flex;flex-direction:column;min-height:0}
+.next .head{display:flex;align-items:baseline;gap:12px;padding:14px 20px 0}
+.next .label{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.05em}
+.next .no{font-size:22px;font-weight:700}
+.next .body{padding:10px 20px 16px;overflow:auto;flex:1}
+#nextQ{font-size:var(--opsize,30px);line-height:1.9;cursor:text}
+#nextQ .seg:hover{background:none}
+.ansrow{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);font-size:22px;line-height:1.8}
+.ansrow .k{font-size:13px;color:var(--sub);margin-right:8px;font-weight:700}
+.ansrow .a{color:var(--ans);font-weight:700}
+.meta{font-size:14px;color:var(--sub);margin-top:8px;white-space:pre-wrap}
+.hint{font-size:12px;color:var(--sub);padding:0 20px 8px}
+.ctrl{display:flex;gap:10px;padding:12px 20px;border-top:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.ctrl .big{font-size:18px;padding:12px 26px}
+.side{display:flex;flex-direction:column;gap:16px;min-height:0}
+.nowcard{padding:14px 16px}
+.nowcard .label{font-size:13px;font-weight:700;color:var(--ok)}
+.nowcard .q{font-size:15px;line-height:1.7;margin-top:6px;max-height:7.5em;overflow:auto}
+.nowcard .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.list{display:flex;flex-direction:column}
+.list .lh{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.list .lh b{font-size:14px}
+.list ul{list-style:none;margin:0;padding:0;overflow:auto;height:calc(5 * 58px)}
+.list li{display:grid;grid-template-columns:44px 1fr;gap:6px;padding:8px 12px;border-bottom:1px solid var(--rowline);cursor:pointer;font-size:13px;line-height:1.5;height:58px;align-items:center}
+.list li:hover{background:var(--soft)}
+.list li.none{display:block;height:auto;color:var(--sub);cursor:default;text-align:center;padding:24px}
+.list .jump{margin-left:auto;display:flex;gap:6px;align-items:center}
+.list .jump input{width:72px;padding:4px 8px;font-size:13px}
+.list .jump button{padding:4px 10px;font-size:13px}
+.list li .n{color:var(--sub);text-align:right;font-weight:700}
+.list li .t{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.list li.latest{background:var(--accent-soft)}
+.list li.shown{box-shadow:inset 3px 0 0 var(--ok)}
+.empty{padding:40px;text-align:center;color:var(--sub);line-height:2}
+
+/* モーダル */
+.modal-bg{position:fixed;inset:0;background:rgba(20,25,35,.45);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:5vh 16px;overflow:auto}
+.modal{background:var(--panel);border-radius:14px;width:min(900px,100%);padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal.sm{width:min(520px,100%)}
+.modal h2{font-size:18px;margin:0 0 14px}
+.modal .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.field{margin-bottom:12px}
+.field>.lab{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.maprow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.maprow .lab{font-size:12px}
+table.prev{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.prev th,table.prev td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+table.prev th{background:var(--soft);white-space:nowrap}
+.prevwrap{max-height:240px;overflow:auto}
+.target{font-size:24px;padding:10px 14px;background:var(--soft);border-radius:8px;margin-bottom:12px;font-weight:700;word-break:break-all}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.quick a{font-size:13px;padding:5px 10px;border:1px solid var(--line);border-radius:99px;text-decoration:none;color:var(--accent);background:var(--panel)}
+.quick a:hover{background:var(--accent-soft)}
+.quick.cand a{font-size:16px;font-weight:700;color:var(--ink)}
+.quick.cand{min-height:34px}
+.annpop{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16);padding:10px 12px;font-size:14px;max-width:340px}
+.annpop a{color:var(--accent);word-break:break-all}
+.qrbox{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.qrbox svg{width:150px;height:150px;background:#fff}
+.urlline{font-size:12px;word-break:break-all;color:var(--sub)}
+.btnlink{display:block;text-align:center;background:var(--accent);color:#fff;border-radius:8px;padding:12px;font-weight:700;text-decoration:none}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1d2330;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* ---------- 投影画面 ---------- */
+#screen{position:fixed;inset:0;display:grid;grid-template-columns:13vw minmax(0,1fr);gap:1.2vw;padding:2.6vh 3vw 2.6vh 0;background:#000;color:#fff;overflow:hidden}
+#screen.light{background:#fff;color:#111}
+.num-font{font-family:'Oswald','BIZ UDGothic',sans-serif}
+.sc-left{position:relative;display:flex;flex-direction:column;align-items:center;min-height:0}
+.sc-nolab{position:absolute;left:.5vw;top:-1.6vh;font-size:2vh;font-weight:600;color:#ffc000}
+.sc-no{font-size:14vh;font-weight:600;line-height:1.05;color:#ffc000;margin-top:1.5vh;letter-spacing:.01em;white-space:nowrap}
+.sc-setlab{font-size:2.9vh;margin-top:5vh}
+.sc-set{font-size:2.9vh;margin-top:2.6vh;text-align:center;line-height:1.5;padding:0 .6vw;word-break:break-all}
+.sc-right{display:grid;grid-template-rows:47fr 23fr 24fr;gap:.6vh;min-height:0}
+.sc-panel{background:#111;min-height:0;overflow:hidden;padding:.6vh .55vw}
+#screen.light .sc-panel{background:#f1f2f4}
+.sc-panel .inner{line-height:1.42}
+#scQin{font-size:5.6vh;line-height:1.6}
+.sc-ansp .inner{color:#ffff00;font-weight:700}
+#screen.light .sc-ansp .inner{color:#b45309}
+.sc-ansp .lab{font-size:.92em;font-weight:600;margin-right:.45em}
+.sc-altp .inner{color:#f4a582;font-weight:700}
+#screen.light .sc-altp .inner{color:#c2410c}
+#screen ruby rt{font-size:.42em}
+.sc-wait{opacity:.5}
+.sc-qr{margin-top:auto;background:#fff;border-radius:1vh;padding:.8vh;text-align:center;color:#111;font-size:1.6vh;font-weight:700}
+.sc-qr svg{width:10.5vw;height:10.5vw;max-width:17vh;max-height:17vh;display:block}
+.sc-hint{position:absolute;left:1vw;bottom:1vh;font-size:12px;opacity:.35}
+
+/* ---------- スマホ画面 ---------- */
+#mobile{max-width:720px;margin:0 auto;padding:12px 12px 80px}
+.m-head{display:flex;align-items:center;gap:8px;padding:6px 4px 12px}
+.m-head h1{font-size:17px;margin:0;flex:1;line-height:1.4}
+.m-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.m-card.latest{border:2px solid var(--accent)}
+.m-card .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.m-card .no{font-weight:700;font-size:15px}
+.m-card .tag{font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px}
+.m-card .q{font-size:17px;line-height:1.9}
+.m-card.latest .q{font-size:19px}
+.m-card .a{margin-top:10px;font-size:17px;color:var(--ans);font-weight:700;line-height:1.7}
+.m-card .a .k{font-size:12px;color:var(--sub);font-weight:400;margin-right:6px}
+.m-card .alt{font-size:13px;color:var(--sub);margin-top:2px}
+.m-card .note{font-size:12px;color:var(--sub);margin-top:6px;white-space:pre-wrap}
+.m-card .save{margin-top:12px;display:flex;gap:8px;align-items:center}
+.m-card .save button{flex:1;padding:11px}
+.m-card .save button.done{background:#e3f5ea;border-color:#bfe5cd;color:var(--ok);font-weight:700}
+.m-sec{font-size:13px;color:var(--sub);font-weight:700;margin:20px 4px 8px}
+.linkmark{font-size:.7em;vertical-align:super;margin-left:1px;text-decoration:none}
+.m-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center}
+.m-bar button{flex:1;max-width:340px}
+
+@media (max-width:900px){
+  .opmain{grid-template-columns:1fr}
+  .side{min-height:400px}
+  .maprow{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= 操作画面 ======================= -->
+<div id="op" class="hidden">
+  <div class="topbar">
+    <h1 id="opTitle">問題表示</h1>
+    <span class="pill" id="opRoom">ルーム</span>
+    <span class="pill" id="opConn">接続中…</span>
+    <span class="spacer"></span>
+    <button id="btnPaste">問題を貼り付け</button>
+    <button id="btnShare">スマホ用QR</button>
+    <button id="btnDark" title="ダークモード切替">🌙</button>
+    <button id="btnSettings">設定</button>
+    <button class="primary" id="btnOpenScreen">投影画面を開く</button>
+  </div>
+  <div class="opmain">
+    <div class="card next">
+      <div class="head"><span class="label">次に読む問題</span><span class="no" id="nextNo"></span><span class="spacer"></span><span class="muted small" id="progress"></span></div>
+      <div class="body" id="nextBody"></div>
+      <div class="hint">読めない漢字・英語は、その部分をクリック（または範囲をドラッグ）すると、ルビや参考リンクを付けられます。</div>
+      <div class="ctrl">
+        <button id="btnPrev" title="←">◀ 前の問題</button>
+        <button class="primary big" id="btnRead" title="Enter">読了 → 投影 ⏎</button>
+        <button id="btnSkip" title="→">次の問題 ▶</button>
+        <span class="spacer"></span>
+        <span style="display:flex;flex-direction:column;gap:4px">
+          <label class="chk small"><input type="checkbox" id="chkEnter"> Enter キーで問題を進める</label>
+          <label class="chk small"><input type="checkbox" id="chkAutoAns"> 読了時に答えも投影</label>
+        </span>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card nowcard">
+        <div class="label" id="nowLabel">投影中：なし</div>
+        <div class="q" id="nowQ"></div>
+        <div class="row">
+          <button id="btnToggleAns" title="A">答えを表示 (A)</button>
+          <button id="btnClear">投影を消す</button>
+        </div>
+      </div>
+      <div class="card list">
+        <div class="lh"><b>読んだ問題</b><span class="muted small">新しい順</span><span class="jump"><input type="text" id="jumpNo" placeholder="No." inputmode="numeric"><button id="btnJump">へ移動</button></span></div>
+        <ul id="qlist"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= 投影画面 ======================= -->
+<div id="screen" class="hidden">
+  <div class="sc-left">
+    <div class="sc-nolab num-font">No.</div>
+    <div class="sc-no num-font" id="scNo"></div>
+    <div class="sc-setlab">問題集</div>
+    <div class="sc-set" id="scSet"></div>
+    <div class="sc-qr hidden" id="scQr"><div id="scQrSvg"></div>スマホで見る</div>
+  </div>
+  <div class="sc-right">
+    <div class="sc-panel" id="scQ"><div class="inner qtext" id="scQin"></div></div>
+    <div class="sc-panel sc-ansp" id="scAP"><div class="inner qtext" id="scAin"></div></div>
+    <div class="sc-panel sc-altp" id="scLP"><div class="inner qtext" id="scLin"></div></div>
+  </div>
+  <div class="sc-hint">F キーで全画面</div>
+</div>
+
+<!-- ======================= スマホ画面 ======================= -->
+<div id="mobile" class="hidden">
+  <div class="m-head"><h1 id="mTitle">問題表示</h1><span class="pill" id="mConn">接続中…</span></div>
+  <div id="mLatest"></div>
+  <div class="m-sec" id="mHistHead"></div>
+  <div id="mHist"></div>
+  <div class="m-bar hidden" id="mBar"><button class="primary" id="mSend">早押しストックへ送る</button><button id="mStockSet" style="flex:0 0 auto">⚙</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* QRコード生成ライブラリ（qrcode-generator, MIT License, Kazuhiko Arase） */
+
+var qrcode = function() {
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+    var _this = {};
+    var makeImpl = function(test, maskPattern) {
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+      mapData(_dataCache, maskPattern);
+    };
+    var setupPositionProbePattern = function(row, col) {
+      for (var r = -1; r <= 7; r += 1) {
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+        for (var c = -1; c <= 7; c += 1) {
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+    var getBestMaskPattern = function() {
+      var minLostPoint = 0;
+      var pattern = 0;
+      for (var i = 0; i < 8; i += 1) {
+        makeImpl(true, i);
+        var lostPoint = QRUtil.getLostPoint(_this);
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+      return pattern;
+    };
+    var setupTimingPattern = function() {
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+    var setupPositionAdjustPattern = function() {
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+      for (var i = 0; i < pos.length; i += 1) {
+        for (var j = 0; j < pos.length; j += 1) {
+          var row = pos[i];
+          var col = pos[j];
+          if (_modules[row][col] != null) {
+            continue;
+          }
+          for (var r = -2; r <= 2; r += 1) {
+            for (var c = -2; c <= 2; c += 1) {
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+    var setupTypeNumber = function(test) {
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+    var setupTypeInfo = function(test, maskPattern) {
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+      for (var i = 0; i < 15; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+      for (var i = 0; i < 15; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+    var mapData = function(data, maskPattern) {
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+        if (col == 6) col -= 1;
+        while (true) {
+          for (var c = 0; c < 2; c += 1) {
+            if (_modules[row][col - c] == null) {
+              var dark = false;
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+              var mask = maskFunc(row, col - c);
+              if (mask) {
+                dark = !dark;
+              }
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+          row += inc;
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+    var createBytes = function(buffer, rsBlocks) {
+      var offset = 0;
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = new Array(dcCount);
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+      var data = new Array(totalCodeCount);
+      var index = 0;
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+      return data;
+    };
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+      var buffer = qrBitBuffer();
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+      while (true) {
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+      return createBytes(buffer, rsBlocks);
+    };
+    _this.addData = function(data, mode) {
+      mode = mode || 'Byte';
+      var newData = null;
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+        _typeNumber = typeNumber;
+      }
+      makeImpl(false, getBestMaskPattern() );
+    };
+    _this.createTableTag = function(cellSize, margin) {
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+      var qrHtml = '';
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+        qrHtml += '<tr>';
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+        qrHtml += '</tr>';
+      }
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+      return qrHtml;
+    };
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        opts = arguments[0];
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+      return qrSvg;
+    };
+    _this.createDataURL = function(cellSize, margin) {
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+    _this.createImgTag = function(cellSize, margin, alt) {
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+      return img;
+    };
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+      var y, x, r1, r2, p;
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+        ascii += '\n';
+      }
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+      return ascii.substring(0, ascii.length-1);
+    };
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+      var y, x, r, p;
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+          line += p ? white : black;
+        }
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+      return ascii.substring(0, ascii.length-1);
+    };
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+    return _this;
+  };
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+    var unicodeMap = function() {
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+      return unicodeMap;
+    }();
+    var unknownChar = '?'.charCodeAt(0);
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              bytes.push(b);
+            } else {
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+  var QRUtil = function() {
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+    var _this = {};
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+    _this.getMaskFunction = function(maskPattern) {
+      switch (maskPattern) {
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+    _this.getLengthInBits = function(mode, type) {
+      if (1 <= type && type < 10) {
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+      } else if (type < 27) {
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+      } else if (type < 41) {
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+      } else {
+        throw 'type:' + type;
+      }
+    };
+    _this.getLostPoint = function(qrcode) {
+      var moduleCount = qrcode.getModuleCount();
+      var lostPoint = 0;
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+          for (var r = -1; r <= 1; r += 1) {
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+            for (var c = -1; c <= 1; c += 1) {
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+              if (r == 0 && c == 0) {
+                continue;
+              }
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+      var darkCount = 0;
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+      return lostPoint;
+    };
+    return _this;
+  }();
+  var QRMath = function() {
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+    var _this = {};
+    _this.glog = function(n) {
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+      return LOG_TABLE[n];
+    };
+    _this.gexp = function(n) {
+      while (n < 0) {
+        n += 255;
+      }
+      while (n >= 256) {
+        n -= 255;
+      }
+      return EXP_TABLE[n];
+    };
+    return _this;
+  }();
+  function qrPolynomial(num, shift) {
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+    var _this = {};
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+    _this.getLength = function() {
+      return _num.length;
+    };
+    _this.multiply = function(e) {
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+      return qrPolynomial(num, 0);
+    };
+    _this.mod = function(e) {
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+      return qrPolynomial(num, 0).mod(e);
+    };
+    return _this;
+  };
+  var QRRSBlock = function() {
+    var RS_BLOCK_TABLE = [
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+    var _this = {};
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+      var length = rsBlock.length / 3;
+      var list = [];
+      for (var i = 0; i < length; i += 1) {
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+      return list;
+    };
+    return _this;
+  }();
+  var qrBitBuffer = function() {
+    var _buffer = [];
+    var _length = 0;
+    var _this = {};
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+    _this.putBit = function(bit) {
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+      _length += 1;
+    };
+    return _this;
+  };
+  var qrNumber = function(data) {
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+    var _this = {};
+    _this.getMode = function() {
+      return _mode;
+    };
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+    _this.write = function(buffer) {
+      var data = _data;
+      var i = 0;
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+    return _this;
+  };
+  var qrAlphaNum = function(data) {
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+    var _this = {};
+    _this.getMode = function() {
+      return _mode;
+    };
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+    _this.write = function(buffer) {
+      var s = _data;
+      var i = 0;
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+    var getCode = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+    return _this;
+  };
+  var qr8BitByte = function(data) {
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+    var _this = {};
+    _this.getMode = function() {
+      return _mode;
+    };
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+    return _this;
+  };
+  var qrKanji = function(data) {
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+    var _bytes = stringToBytes(data);
+    var _this = {};
+    _this.getMode = function() {
+      return _mode;
+    };
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+    _this.write = function(buffer) {
+      var data = _bytes;
+      var i = 0;
+      while (i + 1 < data.length) {
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+        buffer.put(c, 13);
+        i += 2;
+      }
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+    return _this;
+  };
+  var byteArrayOutputStream = function() {
+    var _bytes = [];
+    var _this = {};
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+    return _this;
+  };
+  var base64EncodeOutputStream = function() {
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+    var _this = {};
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+    var encode = function(n) {
+      if (n < 0) {
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+    _this.writeByte = function(n) {
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+    _this.flush = function() {
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+      if (_length % 3 != 0) {
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+    _this.toString = function() {
+      return _base64;
+    };
+    return _this;
+  };
+  var base64DecodeInputStream = function(str) {
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+    var _this = {};
+    _this.read = function() {
+      while (_buflen < 8) {
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+        var c = _str.charAt(_pos);
+        _pos += 1;
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          continue;
+        }
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+    return _this;
+  };
+  var gifImage = function(width, height) {
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+    var _this = {};
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+    _this.write = function(out) {
+      out.writeString('GIF87a');
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+      out.writeByte(lzwMinCodeSize);
+      var offset = 0;
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+      out.writeString(';');
+    };
+    var bitOutputStream = function(out) {
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+      var _this = {};
+      _this.write = function(data, length) {
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+      return _this;
+    };
+    var getLZWRaster = function(lzwMinCodeSize) {
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+      var table = lzwTable();
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+      bitOut.write(clearCode, bitLength);
+      var dataIndex = 0;
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+      while (dataIndex < _data.length) {
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+        if (table.contains(s + c) ) {
+          s = s + c;
+        } else {
+          bitOut.write(table.indexOf(s), bitLength);
+          if (table.size() < 0xfff) {
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+            table.add(s + c);
+          }
+          s = c;
+        }
+      }
+      bitOut.write(table.indexOf(s), bitLength);
+      bitOut.write(endCode, bitLength);
+      bitOut.flush();
+      return byteOut.toByteArray();
+    };
+    var lzwTable = function() {
+      var _map = {};
+      var _size = 0;
+      var _this = {};
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+      _this.size = function() {
+        return _size;
+      };
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+      return _this;
+    };
+    return _this;
+  };
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+    var b = byteArrayOutputStream();
+    gif.write(b);
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+    return 'data:image/gif;base64,' + base64;
+  };
+  return qrcode;
+}();
+!function() {
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        else {
+          i++;
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+}();
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+'use strict';
+/* =====================================================================
+   共通
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const params = new URLSearchParams(location.search);
+const VIEW = params.get('v') || 'op';
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 1800); }
+function randRoom(){ const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for(let i=0;i<6;i++) s += c[Math.floor(Math.random()*c.length)]; return s; }
+function b64u(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '='; return decodeURIComponent(escape(atob(s))); }
+
+/* Firebase 設定の取得: ファイル内 → URL(&fb=) → この端末に保存したもの */
+function parseFbConfig(text){
+  if(!text) return null;
+  if(typeof text === 'object') return text;
+  let t = String(text).trim();
+  const m = t.match(/\{[\s\S]*\}/); if(!m) return null; t = m[0];
+  try{ return JSON.parse(t); }catch(e){}
+  try{ // JS のオブジェクト表記（キーに引用符なし）にも対応
+    const j = t.replace(/\/\/.*$/gm,'').replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,\s*}/g,'}');
+    return JSON.parse(j);
+  }catch(e){ return null; }
+}
+function getFbConfig(){
+  if(FIREBASE_CONFIG) return parseFbConfig(FIREBASE_CONFIG);
+  const p = params.get('fb');
+  if(p){ try{ const c = JSON.parse(unb64u(p)); LS.set('qd:fb', c); return c; }catch(e){} }
+  return LS.get('qd:fb', null);
+}
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load failed: '+src)); document.head.appendChild(s); }); }
+
+/* =====================================================================
+   同期ストア（Firebase Realtime Database / なければ同じPC内のタブ間同期）
+   ===================================================================== */
+const DEFAULT_STATE = () => ({
+  meta:{ name:'' }, qs:[], cur:0, shown:-1, showAns:false, hist:[], ann:{},
+  disp:{ qr:true, ruby:true, autoAns:true, theme:'dark' }
+});
+function normalize(s){
+  const d = DEFAULT_STATE();
+  s = s || {};
+  const out = Object.assign(d, s);
+  out.meta = Object.assign(d.meta, s.meta || {});
+  out.disp = Object.assign(DEFAULT_STATE().disp, s.disp || {});
+  out.qs = toArr(s.qs).filter(Boolean);
+  out.hist = toArr(s.hist).filter(v => v != null);
+  out.ann = s.ann || {};
+  for(const k in out.ann){ out.ann[k] = { q: toArr(out.ann[k] && out.ann[k].q).filter(Boolean), a: toArr(out.ann[k] && out.ann[k].a).filter(Boolean) }; }
+  if(typeof out.cur !== 'number') out.cur = 0;
+  if(typeof out.shown !== 'number') out.shown = -1;
+  return out;
+}
+function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.keys(v).sort((a,b)=>a-b).map(k => v[k]); }
+function setPath(obj, path, val){
+  const ks = path.split('/'); let o = obj;
+  for(let i=0;i<ks.length-1;i++){ if(o[ks[i]] == null || typeof o[ks[i]] !== 'object') o[ks[i]] = {}; o = o[ks[i]]; }
+  if(val === null) delete o[ks[ks.length-1]]; else o[ks[ks.length-1]] = val;
+}
+const clean = v => v === undefined ? null : JSON.parse(JSON.stringify(v));
+
+class Store {
+  constructor(room){ this.room = room; this.s = DEFAULT_STATE(); this.cbs = []; this.mode = 'local'; this.connected = false; }
+  on(cb){ this.cbs.push(cb); }
+  emit(){ this.cbs.forEach(cb => cb(this.s)); }
+  status(){ return this.mode === 'firebase' ? (this.connected ? 'online' : 'offline') : 'local'; }
+  async connect(){
+    const cfg = getFbConfig();
+    if(cfg && cfg.databaseURL){
+      try{
+        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+        await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+        const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+        this.db = app.database();
+        this.ref = this.db.ref('qdisp/rooms/' + this.room);
+        this.mode = 'firebase';
+        this.db.ref('.info/connected').on('value', snap => { this.connected = !!snap.val(); this.emit(); });
+        this.ref.on('value', snap => { this.s = normalize(snap.val()); this.emit(); }, err => { console.error(err); toast('Firebase の読み込みに失敗：' + err.code); });
+        return;
+      }catch(e){ console.error(e); toast('Firebase に接続できません。同じPC内のみで動作します'); }
+    }
+    this.mode = 'local';
+    this.key = 'qd:room:' + this.room;
+    this.s = normalize(LS.get(this.key, null));
+    try{ this.bc = new BroadcastChannel('qd-' + this.room); this.bc.onmessage = () => { this.s = normalize(LS.get(this.key, null)); this.emit(); }; }catch(e){}
+    window.addEventListener('storage', e => { if(e.key === this.key){ this.s = normalize(LS.get(this.key, null)); this.emit(); } });
+    this.emit();
+  }
+  update(patch){
+    for(const p in patch) setPath(this.s, p, clean(patch[p]));
+    this.s = normalize(this.s);
+    if(this.mode === 'firebase'){
+      const fp = {}; for(const p in patch) fp[p] = clean(patch[p]);
+      fp['meta/updated'] = Date.now();
+      this.ref.update(fp).catch(e => toast('保存に失敗：' + e.code));
+    }else{
+      LS.set(this.key, this.s);
+      if(this.bc) this.bc.postMessage(1);
+    }
+    this.emit();
+  }
+}
+
+/* =====================================================================
+   ルビ・リンク付きテキストの描画
+   ann: [{s:開始, e:終了, r:ルビ, l:リンク}]
+   ===================================================================== */
+function sortedAnns(list, len){
+  return (list || []).filter(a => a && a.e > a.s && a.s >= 0 && a.e <= len).sort((x,y) => x.s - y.s)
+    .filter((a, i, arr) => i === 0 || a.s >= arr[i-1].e);
+}
+function renderText(text, anns, opt = {}){
+  text = String(text ?? '');
+  const list = sortedAnns(anns, text.length);
+  let html = '', pos = 0;
+  const seg = (s, e) => s < e ? `<span class="seg" data-s="${s}">${esc(text.slice(s, e))}</span>` : '';
+  list.forEach((a, i) => {
+    html += seg(pos, a.s);
+    const base = esc(text.slice(a.s, a.e));
+    const showRuby = a.r && opt.ruby !== false;
+    const inner = showRuby ? `<ruby>${base}<rt>${esc(a.r)}</rt></ruby>` : base;
+    const linkCls = a.l && opt.links ? ' has-link' : '';
+    html += `<span class="ann${linkCls}" data-s="${a.s}" data-e="${a.e}">${inner}</span>`;
+    if(a.l && opt.linkMark) html += `<a class="linkmark" href="${esc(a.l)}" target="_blank" rel="noopener">🔗</a>`;
+    pos = a.e;
+  });
+  html += seg(pos, text.length);
+  return html;
+}
+
+/* =====================================================================
+   貼り付けデータの解析（Excel / スプレッドシートのコピー＝タブ区切り）
+   ===================================================================== */
+function parseDelimited(text){
+  text = text.replace(/\r\n?/g, '\n');
+  const delim = text.includes('\t') ? '\t' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(q){
+      if(c === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else q = false; }
+      else cell += c;
+    }else{
+      if(c === '"' && cell === '') q = true;
+      else if(c === delim){ row.push(cell); cell = ''; }
+      else if(c === '\n'){ row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+  }
+  if(cell !== '' || row.length){ row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(c => c.trim())).filter(r => r.some(c => c !== ''));
+}
+const FIELDS = [
+  { k:'no',   name:'番号',   re:/^(no\.?|ｎｏ|番号|問題番号|通し|#|№|q\s*no)/i },
+  { k:'q',    name:'問題文', re:/(問題文|^問題$|^問$|^問い$|question|^q$|^設問)/i },
+  { k:'a',    name:'答え',   re:/(解答|^答え?$|正解|answer|^a$|^答$)/i },
+  { k:'alt',  name:'別解',   re:/(別解|許容|alternative)/i },
+  { k:'note', name:'備考',   re:/(備考|メモ|出典|ジャンル|作問|note|コメント|解説|分野)/i },
+];
+function analyzePaste(text){
+  const rows = parseDelimited(text);
+  if(!rows.length) return null;
+  const ncol = Math.max(...rows.map(r => r.length));
+  let headerIdx = -1, map = {};
+  for(let i = 0; i < Math.min(rows.length, 15); i++){
+    const r = rows[i]; const m = {};
+    r.forEach((c, j) => { for(const f of FIELDS){ if(m[f.k] == null && f.re.test(c) && c.length <= 12){ m[f.k] = j; break; } } });
+    if(m.q != null || (m.a != null && Object.keys(m).length >= 2)){ headerIdx = i; map = m; break; }
+  }
+  let name = '';
+  if(headerIdx > 0){ name = rows.slice(0, headerIdx).map(r => r.filter(Boolean).join(' ')).find(Boolean) || ''; }
+  const data = rows.slice(headerIdx + 1);
+  if(map.q == null){
+    // 見出しがないとき：平均文字数がいちばん長い列を問題文とみなす
+    const avg = []; for(let j = 0; j < ncol; j++){ const v = data.map(r => (r[j]||'').length); avg[j] = v.reduce((a,b)=>a+b,0) / Math.max(1, v.length); }
+    const used = new Set(Object.values(map));
+    let best = -1; avg.forEach((v, j) => { if(!used.has(j) && (best < 0 || v > avg[best])) best = j; });
+    map.q = best;
+    if(map.no == null){ const j0 = [...Array(ncol).keys()].find(j => j !== map.q && data.length && data.filter(r => /^\s*[0-9０-９]+\s*$/.test(r[j]||'')).length >= data.length * 0.8); if(j0 != null) map.no = j0; }
+    if(map.a == null && map.q + 1 < ncol) map.a = map.q + 1;
+  }
+  return { rows, headerIdx, map, name, ncol, header: headerIdx >= 0 ? rows[headerIdx] : null };
+}
+function buildQuestions(info, map){
+  const data = info.rows.slice(info.headerIdx + 1);
+  const g = (r, k) => map[k] != null && map[k] >= 0 ? (r[map[k]] || '') : '';
+  return data.map((r, i) => ({ no: g(r,'no') || String(i + 1), q: g(r,'q'), a: g(r,'a'), alt: g(r,'alt'), note: g(r,'note') }))
+             .filter(x => x.q.trim() !== '');
+}
+
+/* =====================================================================
+   カッコ書きのふりがな → ルビ（例：草薙剣（くさなぎのつるぎ） → 草薙剣 にルビ）
+   ===================================================================== */
+const KANA_ONLY = /^[\p{Script=Hiragana}\p{Script=Katakana}ー・゠\s]+$/u;
+const PARTICLES = 'のがをにはとでもへやか';
+const isKanji = ch => /[\p{Script=Han}々〆ヶヵ]/u.test(ch || '');
+const isHira = ch => /\p{Script=Hiragana}/u.test(ch || '');
+const isLatinCh = ch => /[A-Za-zÀ-ɏ0-9Ａ-Ｚａ-ｚ０-９'’\-\.&]/.test(ch || '');
+const toHira = t => String(t).replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+function extractParenRuby(text){
+  text = String(text ?? '');
+  const re = /[（(]([^（）()]{1,40})[）)]/g;
+  let out = '', last = 0, m; const anns = [];
+  while((m = re.exec(text))){
+    const reading = m[1].trim(), p = m.index;
+    if(!reading || !KANA_ONLY.test(reading)) continue;
+    let b = p;
+    if(isKanji(text[b-1])){
+      while(b > 0 && isKanji(text[b-1])) b--;
+      // 送りがなをはさむ語（掛け軸・思い出 など）は前の漢字までのばす
+      for(;;){
+        let k = b, n = 0;
+        while(k > 0 && isHira(text[k-1]) && n < 2){ k--; n++; }
+        if(n === 0 || k === 0 || !isKanji(text[k-1])) break;
+        const kana = text.slice(k, b);
+        // 「の」などの助詞は、読みが今の漢字数に対して長すぎるとき（乙巳の変 など）だけまたぐ
+        if(n === 1 && PARTICLES.includes(kana) && toHira(reading).replace(/\s/g, '').length <= 3.5 * [...text.slice(b, p)].filter(isKanji).length) break;
+        if(!toHira(reading).includes(kana)) break;
+        while(k > 0 && isKanji(text[k-1])) k--;
+        b = k;
+      }
+    }else if(isLatinCh(text[b-1])){
+      while(b > 0 && (isLatinCh(text[b-1]) || (text[b-1] === ' ' && isLatinCh(text[b-2])))) b--;
+    }else continue;
+    if(b < last) continue;
+    out += text.slice(last, p);
+    anns.push({ s: out.length - (p - b), e: out.length, r: reading, l: '' });
+    last = p + m[0].length;
+  }
+  out += text.slice(last);
+  return { text: out, anns };
+}
+function convertParenRuby(qs){
+  const ann = {};
+  const out = qs.map((x, i) => {
+    const q = extractParenRuby(x.q), a = extractParenRuby(x.a);
+    if(q.anns.length || a.anns.length) ann['q' + i] = { q: q.anns, a: a.anns };
+    return Object.assign({}, x, { q: q.text, a: a.text });
+  });
+  return { qs: out, ann };
+}
+
+/* =====================================================================
+   ルビ候補（辞書：kuromoji.js ／ AI：Claude API キーを設定したとき）
+   ===================================================================== */
+const KURO_BASE = window.__KURO_BASE || 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/';
+let kuroP = null;
+function getTokenizer(){
+  if(!kuroP){
+    kuroP = loadScript(KURO_BASE + 'build/kuromoji.js').then(() => new Promise((res, rej) =>
+      kuromoji.builder({ dicPath: KURO_BASE + 'dict/' }).build((err, t) => err ? rej(err) : res(t))));
+    kuroP.catch(() => { kuroP = null; });
+  }
+  return kuroP;
+}
+function readTokens(toks){
+  let r = '';
+  for(const k of toks){
+    const rd = k.reading && k.reading !== '*' ? toHira(k.reading) : (/^[\p{Script=Hiragana}\p{Script=Katakana}ー]+$/u.test(k.surface_form) ? toHira(k.surface_form) : null);
+    if(rd == null) return null;
+    r += rd;
+  }
+  return r;
+}
+async function dictReading(text, s, e){
+  const t = await getTokenizer();
+  const word = text.slice(s, e);
+  if(!/[\p{Script=Han}々]/u.test(word)) return null;
+  let pos = 0, inside = [], clean = true;
+  for(const k of t.tokenize(text)){
+    const ks = pos, ke = pos + k.surface_form.length; pos = ke;
+    if(ke <= s || ks >= e) continue;
+    if(ks < s || ke > e) clean = false;
+    inside.push(k);
+  }
+  const r = clean ? readTokens(inside) : readTokens(t.tokenize(word));
+  return r && r !== toHira(word) ? r : null;
+}
+async function aiReadings(text, s, e){
+  const key = LS.get('qd:aiKey', ''); if(!key) return null;
+  const word = text.slice(s, e);
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: LS.get('qd:aiModel', '') || 'claude-haiku-5-5', max_tokens: 200,
+      messages: [{ role: 'user', content: `クイズの問題文の中にある「${word}」の読み方を答えてください。文脈に合う読みを、日本語はひらがな、英語などの外国語はカタカナの発音表記で、可能性の高い順に最大3つ、JSONの文字列配列だけで出力してください（説明は不要）。\n問題文：${text}` }] })
+  });
+  if(!res.ok) throw new Error('AI ' + res.status);
+  const j = await res.json();
+  const t = (j.content || []).map(c => c.text || '').join('');
+  const m = t.match(/\[[\s\S]*?\]/); if(!m) return null;
+  return JSON.parse(m[0]).map(String).filter(Boolean).slice(0, 3);
+}
+
+/* =====================================================================
+   URL・QR
+   ===================================================================== */
+function baseUrl(){ return location.origin + location.pathname; }
+function viewUrl(v, room, withFb){
+  const u = new URLSearchParams({ v, room });
+  if(withFb && !FIREBASE_CONFIG){ const c = getFbConfig(); if(c) u.set('fb', b64u(JSON.stringify(c))); }
+  return baseUrl() + '?' + u.toString();
+}
+function qrSvg(text){
+  try{ const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); }
+  catch(e){ return '<div class="small">QR作成失敗</div>'; }
+}
+function lookupLinks(word){
+  const w = encodeURIComponent(word);
+  const latin = /[A-Za-z]/.test(word);
+  const links = [
+    ['Google（読み方）', `https://www.google.com/search?q=${w}+${latin ? '発音' : '読み方'}`],
+    ['Wikipedia', `https://ja.wikipedia.org/w/index.php?search=${w}`],
+    ['Weblio', `https://www.weblio.jp/content/${w}`],
+  ];
+  if(latin) links.push(['英辞郎', `https://eow.alc.co.jp/search?q=${w}`], ['Forvo（発音）', `https://ja.forvo.com/search/${w}/`]);
+  else links.push(['コトバンク', `https://kotobank.jp/search?q=${w}`]);
+  return links;
+}
+
+/* =====================================================================
+   起動
+   ===================================================================== */
+let store;
+
+/* =====================================================================
+   操作画面
+   ===================================================================== */
+async function initOp(){
+  $('#op').classList.remove('hidden');
+  setOpDark(LS.get('qd:opdark', false));
+  let room = (params.get('room') || LS.get('qd:lastRoom', '') || randRoom()).toUpperCase();
+  LS.set('qd:lastRoom', room);
+  if(params.get('room') !== room){ history.replaceState(null, '', baseUrl() + '?room=' + room); }
+  store = new Store(room);
+  store.on(renderOp);
+  await store.connect();
+  document.title = '操作｜問題表示';
+
+  $('#btnOpenScreen').onclick = () => window.open(viewUrl('screen', room, true), 'qd-screen-' + room, 'width=1280,height=720');
+  $('#btnPaste').onclick = openPaste;
+  $('#btnSettings').onclick = openSettings;
+  $('#btnShare').onclick = openShare;
+  $('#btnRead').onclick = doRead;
+  $('#btnSkip').onclick = () => moveCur(1);
+  $('#btnPrev').onclick = () => moveCur(-1);
+  $('#btnToggleAns').onclick = () => store.update({ showAns: !store.s.showAns });
+  $('#btnClear').onclick = () => store.update({ shown: -1 });
+  $('#chkAutoAns').onchange = e => store.update({ 'disp/autoAns': e.target.checked });
+  $('#qlist').onclick = e => { const li = e.target.closest('li[data-i]'); if(li){ store.update({ cur: +li.dataset.i }); toast('No. ' + store.s.qs[+li.dataset.i].no + ' を「次に読む問題」にしました'); } };
+  const jump = () => { const v = $('#jumpNo').value.trim(); if(!v) return; const z = v.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    const i = store.s.qs.findIndex(x => String(x.no).trim() === z || String(x.no).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim() === z);
+    if(i < 0){ toast('No. ' + v + ' が見つかりません'); return; } store.update({ cur: i }); $('#jumpNo').value = ''; $('#jumpNo').blur(); };
+  $('#btnJump').onclick = jump;
+  $('#jumpNo').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); jump(); } });
+  $('#chkEnter').checked = LS.get('qd:enterRead', true);
+  $('#chkEnter').onchange = e => LS.set('qd:enterRead', e.target.checked);
+  $('#btnDark').onclick = () => setOpDark(!document.body.classList.contains('dark'));
+  $('#nextBody').addEventListener('mouseup', onTextPick);
+
+  document.addEventListener('keydown', e => {
+    const ae = document.activeElement;
+    if(document.querySelector('.modal-bg') || /TEXTAREA|SELECT/.test(ae.tagName) || (ae.tagName === 'INPUT' && !/checkbox|radio/.test(ae.type))) return;
+    if(e.key === 'Enter'){ if(LS.get('qd:enterRead', true)){ e.preventDefault(); doRead(); } }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); moveCur(1); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); moveCur(-1); }
+    else if(e.key === 'a' || e.key === 'A'){ store.update({ showAns: !store.s.showAns }); }
+  });
+  // ボタン・チェックボックスを押したあともキーボード操作が効くようにフォーカスを外す
+  $('#op').addEventListener('click', e => { const t = e.target.closest('button, input[type=checkbox]'); if(t && !t.closest('.modal-bg') && t.id !== 'btnJump') t.blur(); });
+  document.addEventListener('mousedown', e => { const p = $('.annpop'); if(p && !p.contains(e.target)) p.remove(); });
+
+  if(!store.s.qs.length) setTimeout(openPaste, 300);
+}
+function setOpDark(on){ document.body.classList.toggle('dark', !!on); LS.set('qd:opdark', !!on); const b = $('#btnDark'); if(b) b.textContent = on ? '☀' : '🌙'; }
+function moveCur(d){ const s = store.s; const n = s.qs.length; if(!n) return; store.update({ cur: Math.max(0, Math.min(n, s.cur + d)) }); }
+function doRead(){
+  const s = store.s; if(s.cur >= s.qs.length) return;
+  const hist = s.hist.filter(i => i !== s.cur).concat([s.cur]);
+  store.update({ shown: s.cur, hist, cur: s.cur + 1, showAns: !!s.disp.autoAns });
+}
+let lastListSig = '';
+function renderOp(s){
+  const st = store.status();
+  $('#opConn').textContent = st === 'online' ? 'スマホ連携：オン' : st === 'offline' ? 'オフライン' : 'このPC内のみ';
+  $('#opConn').className = 'pill ' + (st === 'online' ? 'on' : 'off');
+  $('#opRoom').textContent = 'ルーム ' + store.room;
+  $('#opTitle').textContent = s.meta.name || '問題表示';
+  $('#chkAutoAns').checked = !!s.disp.autoAns;
+  const n = s.qs.length;
+  $('#progress').textContent = n ? `読了 ${new Set(s.hist).size} / ${n}問` : '';
+  const q = s.qs[s.cur];
+  const body = $('#nextBody');
+  if(!n){
+    $('#nextNo').textContent = '';
+    body.innerHTML = '<div class="empty">まだ問題がありません。<br>Excel やスプレッドシートで問題の範囲をコピーして、<br>「問題を貼り付け」から貼り付けてください。</div>';
+  }else if(!q){
+    $('#nextNo').textContent = '';
+    body.innerHTML = '<div class="empty">最後の問題まで読み終わりました。</div>';
+  }else{
+    const an = s.ann['q' + s.cur] || { q:[], a:[] };
+    $('#nextNo').textContent = 'No. ' + q.no;
+    body.innerHTML = `<div id="nextQ" class="qtext" data-k="q">${renderText(q.q, an.q, { links:true })}</div>
+      <div class="ansrow"><span class="k">答</span><span class="a qtext" data-k="a">${renderText(q.a, an.a, { links:true })}</span>
+      ${q.alt ? `<div class="meta">別解：${esc(q.alt)}</div>` : ''}${q.note ? `<div class="meta">${esc(q.note)}</div>` : ''}</div>`;
+  }
+  $('#btnRead').disabled = !q;
+  $('#btnPrev').disabled = s.cur <= 0;
+  $('#btnSkip').disabled = s.cur >= n;
+  const sq = s.qs[s.shown];
+  $('#nowLabel').textContent = sq ? `投影中：No. ${sq.no}` : '投影中：なし';
+  $('#nowQ').textContent = sq ? sq.q : '';
+  $('#btnToggleAns').textContent = s.showAns ? '答えを隠す (A)' : '答えを表示 (A)';
+  $('#btnToggleAns').disabled = !sq;
+
+  const read = new Set(s.hist);
+  const sig = JSON.stringify([n, s.cur, s.shown, s.hist, s.meta.name]);
+  if(sig !== lastListSig){
+    lastListSig = sig;
+    const recent = s.hist.slice().reverse();
+    $('#qlist').innerHTML = recent.length ? recent.map((i, k) => { const x = s.qs[i]; return x ? `<li data-i="${i}" class="${k === 0 ? 'latest' : ''} ${i === s.shown ? 'shown' : ''}" title="クリックで「次に読む問題」にします"><span class="n">${esc(x.no)}</span><span class="t">${esc(x.q)}</span></li>` : ''; }).join('') : '<li class="none">まだ読んだ問題はありません</li>';
+    $('#qlist').scrollTop = 0;
+  }
+}
+
+/* ---------- ルビ・リンク編集 ---------- */
+function offsetIn(node, off){
+  const el = node.nodeType === 3 ? node.parentElement : node;
+  const ann = el.closest('.ann');
+  if(ann) return { ann, s: +ann.dataset.s, e: +ann.dataset.e };
+  const seg = el.closest('.seg');
+  if(seg) return { pos: +seg.dataset.s + (node.nodeType === 3 ? off : 0) };
+  return null;
+}
+function charType(ch){
+  if(/[\p{Script=Han}々〆ヶ]/u.test(ch)) return 'kanji';
+  if(/[\p{Script=Katakana}ー･・]/u.test(ch)) return 'kata';
+  if(/[A-Za-z0-9Ａ-Ｚａ-ｚ'’\-\.&]/.test(ch)) return 'latin';
+  if(/[\p{Script=Hiragana}]/u.test(ch)) return 'hira';
+  return 'other';
+}
+function expandWord(text, pos){
+  if(pos >= text.length) pos = text.length - 1;
+  const t = charType(text[pos]); if(t === 'other') return null;
+  let s = pos, e = pos + 1;
+  while(s > 0 && charType(text[s-1]) === t) s--;
+  while(e < text.length && charType(text[e]) === t) e++;
+  // 英語は単語の途中のピリオド等を端から除く
+  while(t === 'latin' && e > s + 1 && /[\.\-']/.test(text[e-1])) e--;
+  return { s, e };
+}
+function onTextPick(ev){
+  const holder = ev.target.closest('[data-k]'); if(!holder) return;
+  const k = holder.dataset.k;
+  const s = store.s; const qi = s.cur; const q = s.qs[qi]; if(!q) return;
+  const text = k === 'q' ? q.q : q.a;
+  const sel = window.getSelection();
+  let range = null;
+  if(sel && !sel.isCollapsed && holder.contains(sel.anchorNode) && holder.contains(sel.focusNode)){
+    const a = offsetIn(sel.anchorNode, sel.anchorOffset), b = offsetIn(sel.focusNode, sel.focusOffset);
+    if(a && b){
+      const pa = a.ann ? [a.s, a.e] : [a.pos, a.pos], pb = b.ann ? [b.s, b.e] : [b.pos, b.pos];
+      range = { s: Math.min(pa[0], pb[0]), e: Math.max(pa[1], pb[1]) };
+      if(range.e <= range.s) range = null;
+    }
+  }
+  if(!range){
+    const annEl = ev.target.closest('.ann');
+    if(annEl){ range = { s: +annEl.dataset.s, e: +annEl.dataset.e }; }
+    else{
+      let node, off;
+      if(document.caretRangeFromPoint){ const r = document.caretRangeFromPoint(ev.clientX, ev.clientY); if(r){ node = r.startContainer; off = r.startOffset; } }
+      else if(document.caretPositionFromPoint){ const p = document.caretPositionFromPoint(ev.clientX, ev.clientY); if(p){ node = p.offsetNode; off = p.offset; } }
+      if(!node) return;
+      const o = offsetIn(node, off); if(!o || o.pos == null) return;
+      // クリック位置の文字（キャレットの左右どちらか近いほう）
+      let pos = o.pos;
+      if(node.nodeType === 3){
+        const r = document.createRange(); const len = node.length;
+        if(off < len){ r.setStart(node, off); r.setEnd(node, off + 1); const rc = r.getBoundingClientRect(); if(ev.clientX < rc.left && off > 0) pos--; }
+        else pos--;
+      }
+      range = expandWord(text, Math.max(0, pos));
+    }
+  }
+  if(!range) return;
+  sel && sel.removeAllRanges();
+  openAnnEditor(qi, k, text, range);
+}
+function openAnnEditor(qi, k, text, range){
+  const s = store.s;
+  const cur = (s.ann['q' + qi] || { q:[], a:[] })[k];
+  const exist = cur.find(a => a.s === range.s && a.e === range.e) || {};
+  let { s: rs, e: re } = range;
+  const m = modal(`<h2>ルビ・参考リンク</h2>
+    <div class="field"><span class="lab">対象の文字（範囲は ◀▶ で調整）</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button data-adj="s-">◀</button><button data-adj="s+">▶</button>
+        <div class="target" id="annTarget" style="flex:1;margin:0;text-align:center"></div>
+        <button data-adj="e-">◀</button><button data-adj="e+">▶</button>
+      </div></div>
+    <div class="field"><span class="lab">ルビの候補（押すと入力されます）</span><div class="quick cand" id="annCand"></div></div>
+    <div class="field"><span class="lab">ルビ（読み）</span><input type="text" id="annRuby" placeholder="例：しゅんじゅん" value="${esc(exist.r || '')}"></div>
+    <div class="field"><span class="lab">参考リンク（URL・任意）</span><input type="url" id="annLink" placeholder="https://..." value="${esc(exist.l || '')}"></div>
+    <div class="field"><span class="lab">調べる</span><div class="quick" id="annQuick"></div></div>
+    <div class="muted small">ルビは投影画面とスマホにも表示されます。リンクは操作画面とスマホで開けます。</div>
+    <div class="foot">${exist.s != null ? '<button class="danger" id="annDel">削除</button>' : ''}<span class="spacer"></span><button id="annCancel">キャンセル</button><button class="primary" id="annSave">保存</button></div>`, 'sm');
+  let userTyped = !!exist.r, candSeq = 0, candT = null;
+  const rubyIn = m.querySelector('#annRuby');
+  rubyIn.addEventListener('input', () => { userTyped = true; });
+  const candBox = m.querySelector('#annCand');
+  candBox.addEventListener('click', e => { const a = e.target.closest('[data-r]'); if(a){ e.preventDefault(); rubyIn.value = a.dataset.r; userTyped = true; rubyIn.focus(); } });
+  const loadCands = async () => {
+    const seq = ++candSeq, ss = rs, ee = re;
+    const cands = [], notes = [];
+    const show = () => {
+      if(seq !== candSeq) return;
+      const uniq = [...new Map(cands.map(c => [c.r, c])).values()];
+      candBox.innerHTML = uniq.map(c => `<a href="#" data-r="${esc(c.r)}">${esc(c.r)} <span class="muted small">${c.src}</span></a>`).join('') + notes.map(n => `<span class="muted small" style="align-self:center">${n}</span>`).join('');
+      if(!userTyped && uniq.length) rubyIn.value = uniq[0].r;
+    };
+    notes.push('候補を探しています…'); show(); notes.length = 0;
+    const jobs = [];
+    if(LS.get('qd:aiKey', '')) jobs.push(aiReadings(text, ss, ee).then(rs2 => { (rs2 || []).forEach(r => cands.unshift({ r, src:'AI' })); }).catch(err => { notes.push('AI候補を取得できませんでした（' + esc(err.message) + '）'); }));
+    jobs.push(dictReading(text, ss, ee).then(r => { if(r) cands.push({ r, src:'辞書' }); }).catch(() => { notes.push('辞書を読み込めませんでした'); }));
+    await Promise.all(jobs);
+    // AI候補を先頭に並べ直す
+    cands.sort((a, b) => (a.src === 'AI' ? 0 : 1) - (b.src === 'AI' ? 0 : 1));
+    if(!cands.length && !notes.length) notes.push('候補が見つかりませんでした。直接入力してください');
+    show();
+  };
+  const refresh = () => {
+    const w = text.slice(rs, re);
+    m.querySelector('#annTarget').textContent = w;
+    m.querySelector('#annQuick').innerHTML = lookupLinks(w).map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join('');
+    clearTimeout(candT); candT = setTimeout(loadCands, 250);
+  };
+  refresh();
+  m.querySelectorAll('[data-adj]').forEach(b => b.onclick = () => {
+    const a = b.dataset.adj;
+    if(a === 's-' && rs > 0) rs--; if(a === 's+' && rs < re - 1) rs++;
+    if(a === 'e-' && re > rs + 1) re--; if(a === 'e+' && re < text.length) re++;
+    refresh();
+  });
+  setTimeout(() => m.querySelector('#annRuby').focus(), 50);
+  const save = (remove) => {
+    const r = m.querySelector('#annRuby').value.trim(), l = m.querySelector('#annLink').value.trim();
+    // 新しい範囲と重なるもの・編集前のものは置き換える
+    let list = cur.filter(a => !(a.s < re && a.e > rs) && !(a.s === range.s && a.e === range.e));
+    if(!remove && (r || l)) list.push({ s: rs, e: re, r, l });
+    list.sort((x, y) => x.s - y.s);
+    store.update({ ['ann/q' + qi + '/' + k]: list });
+    closeModal();
+  };
+  m.querySelector('#annSave').onclick = () => save(false);
+  m.querySelector('#annCancel').onclick = closeModal;
+  const del = m.querySelector('#annDel'); if(del) del.onclick = () => save(true);
+  m.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.tagName === 'INPUT'){ e.preventDefault(); save(false); } });
+}
+
+/* ---------- モーダル ---------- */
+function modal(html, size = ''){
+  closeModal();
+  const bg = document.createElement('div'); bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal ${size}">${html}</div>`;
+  bg.addEventListener('mousedown', e => { if(e.target === bg) closeModal(); });
+  bg.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+  document.body.appendChild(bg);
+  return bg.firstElementChild;
+}
+function closeModal(){ document.querySelectorAll('.modal-bg').forEach(m => m.remove()); }
+
+/* ---------- 貼り付け ---------- */
+function openPaste(){
+  const s = store.s;
+  const m = modal(`<h2>問題を貼り付け</h2>
+    <div class="field"><span class="lab">Excel・スプレッドシートでコピーした範囲（見出し行ごと）をそのまま貼り付け</span>
+      <textarea id="pText" rows="8" placeholder="例）&#10;No.	問題文	答え	別解&#10;1	〇〇は何でしょう？	××	"></textarea></div>
+    <div class="field"><span class="lab">問題集の名前</span><input type="text" id="pName" value="${esc(s.meta.name)}" placeholder="例：第3回 埼玉オープン 予選"></div>
+    <div id="pMap" class="hidden">
+      <div class="field"><span class="lab">列の割り当て（自動で推測しています。違っていたら直してください）</span><div class="maprow" id="pMapRow"></div></div>
+      <div class="field"><span class="lab" id="pCount"></span><div class="prevwrap"><table class="prev" id="pPrev"></table></div></div>
+    </div>
+    <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="pParen" ${LS.get('qd:parenRuby', true) ? 'checked' : ''}> カッコ書きのふりがな（例：草薙剣（くさなぎのつるぎ））を消して、自動でルビにする</label>
+    ${s.qs.length ? '<div class="muted small">※ 今の問題（' + s.qs.length + '問）とルビ・読了状況は置き換わります。</div>' : ''}
+    <div class="foot"><button id="pCancel">キャンセル</button><button class="primary" id="pOk" disabled>この内容で反映</button></div>`);
+  let info = null, map = {};
+  const ta = m.querySelector('#pText');
+  const colOpts = sel => '<option value="-1">（なし）</option>' + [...Array(info.ncol).keys()].map(j => `<option value="${j}" ${sel === j ? 'selected' : ''}>${esc(info.header ? (info.header[j] || `列${j+1}`) : `列${j+1}`)}${info.header ? '' : '：' + esc((info.rows[0][j] || '').slice(0, 10))}</option>`).join('');
+  const build = () => { const raw = buildQuestions(info, map); return m.querySelector('#pParen').checked ? convertParenRuby(raw) : { qs: raw, ann: {} }; };
+  const preview = () => {
+    const { qs, ann } = build();
+    const rt = (i, k) => renderText(qs[i][k], (ann['q' + i] || {})[k] || []);
+    m.querySelector('#pCount').textContent = `プレビュー（${qs.length}問）`;
+    m.querySelector('#pPrev').innerHTML = '<tr><th>番号</th><th>問題文</th><th>答え</th><th>別解</th><th>備考</th></tr>' +
+      qs.slice(0, 30).map((x, i) => `<tr><td>${esc(x.no)}</td><td>${rt(i, 'q')}</td><td>${rt(i, 'a')}</td><td>${esc(x.alt)}</td><td>${esc(x.note)}</td></tr>`).join('');
+    m.querySelector('#pOk').disabled = !qs.length;
+    return qs;
+  };
+  const analyze = () => {
+    info = analyzePaste(ta.value);
+    if(!info){ m.querySelector('#pMap').classList.add('hidden'); m.querySelector('#pOk').disabled = true; return; }
+    map = Object.assign({}, info.map);
+    if(info.name && !m.querySelector('#pName').value) m.querySelector('#pName').value = info.name;
+    m.querySelector('#pMapRow').innerHTML = FIELDS.map(f => `<label><span class="lab">${f.name}</span><select data-f="${f.k}">${colOpts(map[f.k] ?? -1)}</select></label>`).join('');
+    m.querySelectorAll('#pMapRow select').forEach(sel => sel.onchange = () => { map[sel.dataset.f] = +sel.value; preview(); });
+    m.querySelector('#pMap').classList.remove('hidden');
+    preview();
+  };
+  ta.addEventListener('input', analyze);
+  setTimeout(() => ta.focus(), 50);
+  m.querySelector('#pCancel').onclick = closeModal;
+  m.querySelector('#pParen').onchange = e => { LS.set('qd:parenRuby', e.target.checked); if(info) preview(); };
+  m.querySelector('#pOk').onclick = () => {
+    const { qs, ann } = build();
+    store.update({ qs, 'meta/name': m.querySelector('#pName').value.trim(), cur: 0, shown: -1, hist: [], ann, showAns: false });
+    closeModal(); toast(qs.length + '問を反映しました');
+  };
+}
+
+/* ---------- スマホ用QR ---------- */
+function openShare(){
+  const room = store.room;
+  const pub = viewUrl('m', room, true), me = viewUrl('me', room, true);
+  const online = store.mode === 'firebase';
+  const m = modal(`<h2>スマホで見る</h2>
+    ${online ? '' : '<p style="color:var(--warn)">いまは Firebase が未設定のため、スマホには届きません。「設定」から Firebase の設定を貼り付けてください。</p>'}
+    <div class="grid2">
+      <div><div class="field"><span class="lab">みんな用（投影と同じ内容）</span></div><div class="qrbox">${qrSvg(pub)}</div><p class="urlline">${esc(pub)}</p><button data-copy="${esc(pub)}">URLをコピー</button></div>
+      <div><div class="field"><span class="lab">自分用（早押しストックに保存ボタン付き）</span></div><div class="qrbox">${qrSvg(me)}</div><p class="urlline">${esc(me)}</p><button data-copy="${esc(me)}">URLをコピー</button></div>
+    </div>
+    <p class="muted small">みんな用のQRは投影画面の右下にも表示されます（設定で切り替え）。自分用のQRは投影されません。</p>
+    <div class="foot"><button class="primary" id="shClose">閉じる</button></div>`);
+  m.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy).then(() => toast('コピーしました')); });
+  m.querySelector('#shClose').onclick = closeModal;
+}
+
+/* ---------- 設定 ---------- */
+function openSettings(){
+  const s = store.s, d = s.disp;
+  const fb = getFbConfig();
+  const m = modal(`<h2>設定</h2>
+    <div class="grid2">
+      <div>
+        <div class="field"><span class="lab">投影画面</span>
+          <label class="chk"><input type="checkbox" id="sQr" ${d.qr ? 'checked' : ''}> スマホ用QRコードを表示</label>
+          <label class="chk"><input type="checkbox" id="sRuby" ${d.ruby ? 'checked' : ''}> ルビを表示</label>
+          <label class="chk"><input type="checkbox" id="sLight" ${d.theme === 'light' ? 'checked' : ''}> 白背景にする（通常は黒）</label>
+        </div>
+        <div class="field"><span class="lab">操作画面</span><label class="chk"><input type="checkbox" id="sDark" ${document.body.classList.contains('dark') ? 'checked' : ''}> ダークモード</label></div>
+        <div class="field"><span class="lab">操作画面の文字の大きさ</span><input type="range" id="sOpSize" min="18" max="48" value="${LS.get('qd:opsize', 30)}" style="width:100%"></div>
+        <div class="field"><span class="lab">ルーム</span>
+          <div style="display:flex;gap:8px"><input type="text" id="sRoom" value="${esc(store.room)}" style="text-transform:uppercase"><button id="sRoomGo">移動</button><button id="sRoomNew">新規</button></div>
+          <div class="muted small" style="margin-top:4px">ルームごとに問題・ルビ・進行状況が保存されます。</div></div>
+      </div>
+      <div>
+        <div class="field"><span class="lab">AI のルビ候補（任意）</span>
+          <input type="text" id="sAiKey" value="${esc(LS.get('qd:aiKey', ''))}" placeholder="Claude API キー（sk-ant-…）" autocomplete="off" spellcheck="false">
+          <div class="muted small" style="margin-top:4px">入れると、クリックした語の読みを AI が文脈から提案します（Anthropic の API 利用料がかかります）。空欄なら辞書の候補だけを出します。キーはこのPCにだけ保存されます。</div></div>
+        <div class="field"><span class="lab">Firebase（スマホ連携）${store.mode === 'firebase' ? ' <span class="pill on">接続済み</span>' : ''}</span>
+          <textarea id="sFb" rows="5" placeholder="Firebase コンソールの firebaseConfig = { ... } をそのまま貼り付け" ${FIREBASE_CONFIG ? 'disabled' : ''}>${FIREBASE_CONFIG ? 'ファイル内で設定済み' : (fb ? esc(JSON.stringify(fb, null, 1)) : '')}</textarea>
+          <div class="muted small" style="margin-top:4px">この端末に保存され、スマホへはQRのURLで受け渡されます。</div></div>
+      </div>
+    </div>
+    <div class="foot"><button id="sCancel">閉じる</button><button class="primary" id="sSave">保存</button></div>`);
+  m.querySelector('#sOpSize').oninput = e => { document.documentElement.style.setProperty('--opsize', e.target.value + 'px'); LS.set('qd:opsize', +e.target.value); };
+  const goRoom = r => { closeModal(); location.href = baseUrl() + '?room=' + r; };
+  m.querySelector('#sRoomGo').onclick = () => { const r = m.querySelector('#sRoom').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); if(r) goRoom(r); };
+  m.querySelector('#sRoomNew').onclick = () => goRoom(randRoom());
+  m.querySelector('#sDark').onchange = e => setOpDark(e.target.checked);
+  m.querySelector('#sCancel').onclick = closeModal;
+  m.querySelector('#sSave').onclick = () => {
+    LS.set('qd:aiKey', m.querySelector('#sAiKey').value.trim());
+    store.update({ 'disp/qr': m.querySelector('#sQr').checked, 'disp/ruby': m.querySelector('#sRuby').checked,
+      'disp/theme': m.querySelector('#sLight').checked ? 'light' : 'dark' });
+    if(!FIREBASE_CONFIG){
+      const t = m.querySelector('#sFb').value.trim();
+      const old = JSON.stringify(getFbConfig());
+      if(!t){ if(old !== 'null'){ localStorage.removeItem('qd:fb'); toast('Firebase 設定を消しました。再読み込みします'); setTimeout(() => location.reload(), 800); } }
+      else{
+        const c = parseFbConfig(t);
+        if(!c || !c.databaseURL){ toast('Firebase 設定を読み取れません（databaseURL が必要です）'); return; }
+        if(JSON.stringify(c) !== old){ LS.set('qd:fb', c); toast('Firebase に接続します…'); setTimeout(() => location.reload(), 800); }
+      }
+    }
+    closeModal();
+  };
+}
+
+/* =====================================================================
+   投影画面
+   ===================================================================== */
+async function initScreen(){
+  $('#screen').classList.remove('hidden');
+  const room = (params.get('room') || '').toUpperCase();
+  store = new Store(room);
+  store.on(renderScreen);
+  await store.connect();
+  document.title = '投影｜問題表示';
+  document.addEventListener('keydown', e => { if(e.key === 'f' || e.key === 'F'){ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } });
+  window.addEventListener('resize', fitScreen);
+}
+function renderScreen(s){
+  const d = s.disp;
+  $('#screen').classList.toggle('light', d.theme === 'light');
+  $('#scSet').textContent = s.meta.name || '';
+  const q = s.qs[s.shown];
+  const an = s.ann['q' + s.shown] || { q:[], a:[] };
+  if(q){
+    $('#scNo').textContent = q.no;
+    $('#scQin').innerHTML = renderText(q.q, an.q, { ruby: d.ruby });
+    $('#scAin').innerHTML = s.showAns ? `<span class="lab num-font">Ans.</span>${renderText(q.a, an.a, { ruby: d.ruby })}` : '';
+    $('#scLin').innerHTML = s.showAns && q.alt ? esc(altLines(q.alt)) : '';
+  }else{
+    $('#scNo').textContent = '';
+    $('#scQin').innerHTML = s.qs.length ? '' : '<span class="sc-wait">ルーム ' + esc(store.room) + '</span>';
+    $('#scAin').innerHTML = ''; $('#scLin').innerHTML = '';
+  }
+  const qrOn = d.qr && store.mode === 'firebase';
+  $('#scQr').classList.toggle('hidden', !qrOn);
+  if(qrOn && !$('#scQrSvg').dataset.done){ $('#scQrSvg').innerHTML = qrSvg(viewUrl('m', store.room, true)); $('#scQrSvg').dataset.done = 1; }
+  fitScreen();
+}
+// 別解：行ごとに「○：」を付ける（すでに ○△× などで始まる行はそのまま）
+function altLines(alt){
+  return String(alt).split(/\n/).map(x => x.trim()).filter(Boolean).map(x => /^[○〇◯△×✕□]/.test(x) ? x : '〇：' + x).join('\n');
+}
+function fitOne(box, inner, minVh, maxVh){
+  if(!box || !inner) return;
+  const vh = window.innerHeight / 100;
+  let lo = minVh * vh, hi = maxVh * vh;
+  inner.style.fontSize = hi + 'px';
+  if(inner.scrollHeight <= box.clientHeight) return;
+  for(let i = 0; i < 12; i++){ const mid = (lo + hi) / 2; inner.style.fontSize = mid + 'px'; if(inner.scrollHeight <= box.clientHeight) lo = mid; else hi = mid; }
+  inner.style.fontSize = lo + 'px';
+}
+function fitScreen(){
+  fitOne($('#scQ'), $('#scQin'), 2.4, 5.6);
+  fitOne($('#scAP'), $('#scAin'), 2.6, 6.4);
+  fitOne($('#scLP'), $('#scLin'), 2, 3.9);
+  const no = $('#scNo'); if(no){ no.style.fontSize = ''; const w = no.parentElement.clientWidth * 0.94; let f = 14; while(no.scrollWidth > w && f > 5){ f -= .5; no.style.fontSize = f + 'vh'; } }
+}
+
+/* =====================================================================
+   スマホ画面（みんな用 / 自分用）
+   ===================================================================== */
+let IS_ME = false;
+async function initMobile(me){
+  IS_ME = me;
+  $('#mobile').classList.remove('hidden');
+  document.body.style.background = 'var(--bg)';
+  const room = (params.get('room') || '').toUpperCase();
+  // 設定情報(fb)をURLから消しておく（ブックマークしやすくするため。設定は端末に保存済み）
+  if(params.get('fb')) history.replaceState(null, '', viewUrl(me ? 'me' : 'm', room, false));
+  store = new Store(room);
+  store.on(renderMobile);
+  await store.connect();
+  document.title = (me ? '自分用｜' : '') + '問題表示';
+  if(me){ $('#mBar').classList.remove('hidden'); $('#mStockSet').onclick = openStockSetting; $('#mSend').onclick = sendQueue; }
+  $('#mobile').addEventListener('click', e => {
+    const b = e.target.closest('[data-save]'); if(b) toggleSave(+b.dataset.save);
+  });
+}
+function mCard(s, i, latest){
+  const q = s.qs[i]; if(!q) return '';
+  const an = s.ann['q' + i] || { q:[], a:[] };
+  const showA = !latest || s.showAns;
+  const key = IS_ME ? stockKey(s, i) : '';
+  const queued = IS_ME && stockQueue().some(x => x.k === key), sent = IS_ME && savedSet().has(key);
+  return `<div class="m-card ${latest ? 'latest' : ''}">
+    <div class="top"><span class="no">第${esc(q.no)}問</span>${latest ? '<span class="tag">いま読んだ問題</span>' : ''}</div>
+    <div class="q qtext">${renderText(q.q, an.q, { links:true, linkMark:true })}</div>
+    ${showA ? `<div class="a"><span class="k">答</span>${renderText(q.a, an.a, { links:true, linkMark:true })}</div>${q.alt ? `<div class="alt">別解：${esc(q.alt)}</div>` : ''}${IS_ME && q.note ? `<div class="note">${esc(q.note)}</div>` : ''}` : '<div class="a muted small">（答えはまだ表示されていません）</div>'}
+    ${IS_ME ? `<div class="save"><button data-save="${i}" class="${queued || sent ? 'done' : ''}">${sent ? '✓ ストックに送信済み' : queued ? '✓ 保存リストに入れました' : '早押しストックに保存'}</button></div>` : ''}
+  </div>`;
+}
+function renderMobile(s){
+  const st = store.status();
+  $('#mConn').textContent = st === 'online' ? '接続中' : st === 'offline' ? 'オフライン' : '未接続';
+  $('#mConn').className = 'pill ' + (st === 'online' ? 'on' : 'off');
+  $('#mTitle').textContent = (IS_ME ? '【自分用】' : '') + (s.meta.name || '問題表示');
+  $('#mLatest').innerHTML = s.qs[s.shown] ? mCard(s, s.shown, true) : '<div class="m-card muted">まだ問題が読まれていません。</div>';
+  const hist = s.hist.filter(i => i !== s.shown).slice().reverse();
+  $('#mHistHead').textContent = hist.length ? `これまでの問題（${hist.length}問）` : '';
+  $('#mHist').innerHTML = hist.map(i => mCard(s, i, false)).join('');
+  if(IS_ME){ const n = stockQueue().length; $('#mSend').textContent = n ? `早押しストックへ送る（${n}問）` : '早押しストックへ送る'; $('#mSend').disabled = !n; }
+}
+
+/* ---------- ④ 早押しストックへの保存 ---------- */
+function stockKey(s, i){ const q = s.qs[i]; return (s.meta.name || '') + '|' + q.no + '|' + q.q.slice(0, 30); }
+function savedSet(){ return new Set(LS.get('qd:saved', [])); }
+function markSaved(key){ const a = LS.get('qd:saved', []); if(!a.includes(key)){ a.push(key); LS.set('qd:saved', a.slice(-3000)); } }
+function stockUrl(){ return LS.get('qd:stockUrl', '') || STOCK_URL; }
+function stockQueue(){ return LS.get('qd:stockQueue', []); }
+function stockItem(s, i){
+  const q = s.qs[i];
+  return { k: stockKey(s, i), q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', no: q.no, set: s.meta.name || '' };
+}
+// 保存ボタン：まずこのスマホの「保存リスト」に入れる（もう一度押すと取り消し）
+function toggleSave(i){
+  const s = store.s; if(!s.qs[i]) return;
+  const it = stockItem(s, i);
+  if(savedSet().has(it.k)){ toast('この問題は送信済みです'); return; }
+  let qu = stockQueue();
+  const has = qu.some(x => x.k === it.k);
+  qu = has ? qu.filter(x => x.k !== it.k) : qu.concat([it]);
+  LS.set('qd:stockQueue', qu);
+  renderMobile(store.s);
+  toast(has ? '保存を取り消しました' : '保存リストに入れました（' + qu.length + '問）');
+}
+// 保存リストをコードにしてコピー → 早押しストックの「取り込み」に貼り付け
+async function sendQueue(){
+  const qu = stockQueue(); if(!qu.length) return;
+  const code = 'HSTOCK1:' + b64u(JSON.stringify(qu.map(({ k, ...x }) => x)));
+  let copied = false;
+  try{ await navigator.clipboard.writeText(code); copied = true; }catch(e){}
+  const url = stockUrl() + '#import';
+  const m = modal(`<h2>早押しストックへ送る（${qu.length}問）</h2>
+    <p style="line-height:1.8;margin-top:0">${copied ? '✓ コードをコピーしました。' : 'コードを長押しで全選択してコピーしてください。'}<br>
+    ① 下のボタンで早押しストックを開く<br>② 「取り込み」の欄に貼り付けて「追加」</p>
+    <textarea readonly rows="3" id="sqCode" style="font-size:12px">${esc(code)}</textarea>
+    <div class="foot" style="flex-direction:column;align-items:stretch">
+      <a class="btnlink" href="${esc(url)}" target="_blank" rel="noopener">早押しストックを開く</a>
+      <button id="sqCopy">コードをもう一度コピー</button>
+      <button id="sqDone">追加できた（保存リストを空にする）</button>
+      <button class="ghost" id="sqClose">閉じる</button>
+    </div>
+    <p class="muted small">「復習：${esc(store.s.meta.name || '無題')}」タグ付きの問題として追加されます。</p>`, 'sm');
+  m.querySelector('#sqCode').onclick = e => e.target.select();
+  m.querySelector('#sqCopy').onclick = () => navigator.clipboard.writeText(code).then(() => toast('コピーしました'), () => { m.querySelector('#sqCode').select(); });
+  m.querySelector('#sqClose').onclick = closeModal;
+  m.querySelector('#sqDone').onclick = () => { qu.forEach(x => markSaved(x.k)); LS.set('qd:stockQueue', []); closeModal(); renderMobile(store.s); toast('送信済みにしました'); };
+}
+function openStockSetting(){
+  const m = modal(`<h2>保存先の設定</h2>
+    <div class="field"><span class="lab">早押しストックのURL</span><input type="url" id="stUrl" value="${esc(stockUrl())}" placeholder="https://..."></div>
+    <div class="muted small">ふだんは変更不要です。空欄にすると最初の設定に戻ります。</div>
+    <div class="foot"><button id="stCancel">閉じる</button><button class="primary" id="stOk">保存</button></div>`, 'sm');
+  m.querySelector('#stCancel').onclick = closeModal;
+  m.querySelector('#stOk').onclick = () => { LS.set('qd:stockUrl', m.querySelector('#stUrl').value.trim()); closeModal(); toast('保存しました'); };
+}
+
+document.documentElement.style.setProperty('--opsize', LS.get('qd:opsize', 30) + 'px');
+(async function main(){
+  if(VIEW === 'screen') await initScreen();
+  else if(VIEW === 'm' || VIEW === 'me') await initMobile(VIEW === 'me');
+  else await initOp();
+})();
+</script>
+</body>
+</html>
