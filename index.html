@@ -94,10 +94,13 @@ body.dark .pill.off{background:#45261a;color:#f6a27e}
 .list li.none{display:block;height:auto;color:var(--sub);cursor:default;text-align:center;padding:24px}
 .list .jump{margin-left:auto;display:flex;gap:6px;align-items:center}
 .list .jump input{width:72px;padding:4px 8px;font-size:13px}
-.list .jump button{padding:4px 10px;font-size:13px}
+.list .jump button{padding:4px 10px;font-size:13px;white-space:nowrap}
 .list li .n{color:var(--sub);text-align:right;font-weight:700}
 .list li .t{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .list li.latest{background:var(--accent-soft)}
+.list li .set{display:block;font-size:11px;color:var(--sub)}
+.list li.other{opacity:.7}
+button.small{font-size:13px;padding:4px 10px}
 .list li.shown{box-shadow:inset 3px 0 0 var(--ok)}
 .empty{padding:40px;text-align:center;color:var(--sub);line-height:2}
 
@@ -105,6 +108,17 @@ body.dark .pill.off{background:#45261a;color:#f6a27e}
 .modal-bg{position:fixed;inset:0;background:rgba(20,25,35,.45);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:5vh 16px;overflow:auto}
 .modal{background:var(--panel);border-radius:14px;width:min(900px,100%);padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .modal.sm{width:min(520px,100%)}
+.modal.wide{width:min(1180px,100%)}
+.edgrid{display:grid;grid-template-columns:340px 1fr;gap:18px;min-height:0}
+.edleft{display:flex;flex-direction:column;gap:8px}
+.edlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:8px;height:min(52vh,460px);overflow:auto}
+.edlist li{display:grid;grid-template-columns:52px 1fr;gap:6px;padding:7px 10px;border-bottom:1px solid var(--rowline);cursor:pointer;font-size:13px;line-height:1.5}
+.edlist li:hover{background:var(--soft)}
+.edlist li.sel{background:var(--accent-soft)}
+.edlist li.cur .n{color:var(--accent)}
+.edlist li .n{font-weight:700;color:var(--sub);text-align:right;white-space:nowrap}
+.edlist li .t{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+@media (max-width:900px){.edgrid{grid-template-columns:1fr}}
 .modal h2{font-size:18px;margin:0 0 14px}
 .modal .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
 .field{margin-bottom:12px}
@@ -157,27 +171,38 @@ table.prev th{background:var(--soft);white-space:nowrap}
 .sc-hint{position:absolute;left:1vw;bottom:1vh;font-size:12px;opacity:.35}
 
 /* ---------- スマホ画面 ---------- */
-#mobile{max-width:720px;margin:0 auto;padding:12px 12px 80px}
-.m-head{display:flex;align-items:center;gap:8px;padding:6px 4px 12px}
-.m-head h1{font-size:17px;margin:0;flex:1;line-height:1.4}
-.m-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.m-card.latest{border:2px solid var(--accent)}
-.m-card .top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+#mobile{max-width:680px;margin:0 auto;padding:0 max(12px, env(safe-area-inset-left)) calc(96px + env(safe-area-inset-bottom));overflow-x:clip}
+body.mview{background:var(--bg);overflow-x:hidden}
+.m-head{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;margin:0 -12px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.m-title{flex:1;min-width:0}
+.m-kind{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.04em}
+.m-head h1{font-size:16px;margin:0;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mLatest{padding-top:12px}
+.m-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.m-card.latest{border:2px solid var(--accent);box-shadow:0 4px 16px rgba(31,95,209,.10)}
+.m-card.empty{color:var(--sub);text-align:center;padding:28px 16px;line-height:1.8}
+.m-card .top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
 .m-card .no{font-weight:700;font-size:15px}
 .m-card .tag{font-size:11px;background:var(--accent);color:#fff;border-radius:99px;padding:2px 8px}
-.m-card .q{font-size:17px;line-height:1.9}
-.m-card.latest .q{font-size:19px}
-.m-card .a{margin-top:10px;font-size:17px;color:var(--ans);font-weight:700;line-height:1.7}
+.m-card .q{font-size:clamp(16px,4.4vw,19px);line-height:1.9;overflow-wrap:anywhere}
+.m-card.latest .q{font-size:clamp(17px,4.9vw,21px)}
+.m-card .a{margin-top:10px;font-size:clamp(16px,4.6vw,19px);color:var(--ans);font-weight:700;line-height:1.75;overflow-wrap:anywhere}
 .m-card .a .k{font-size:12px;color:var(--sub);font-weight:400;margin-right:6px}
-.m-card .alt{font-size:13px;color:var(--sub);margin-top:2px}
-.m-card .note{font-size:12px;color:var(--sub);margin-top:6px;white-space:pre-wrap}
-.m-card .save{margin-top:12px;display:flex;gap:8px;align-items:center}
-.m-card .save button{flex:1;padding:11px}
-.m-card .save button.done{background:#e3f5ea;border-color:#bfe5cd;color:var(--ok);font-weight:700}
-.m-sec{font-size:13px;color:var(--sub);font-weight:700;margin:20px 4px 8px}
+.m-card .alt{font-size:14px;color:var(--sub);margin-top:2px;overflow-wrap:anywhere}
+.m-card .note{font-size:12px;color:var(--sub);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.m-card .save{margin-top:12px;display:flex}
+.m-card .save button{flex:1;min-height:46px;font-size:15px}
+.m-card .save button.done{background:#e3f5ea;border-color:#bfe5cd;color:#1b8a4b;font-weight:700}
+#mobile .ann{white-space:normal}
+#mobile ruby rt{font-size:.55em}
+.m-sec{position:sticky;top:var(--mh, 52px);z-index:10;margin:18px -12px 10px;padding:8px 16px;background:var(--bg);font-size:13px;color:var(--sub);font-weight:700;border-bottom:1px solid var(--line)}
+.m-sec b{color:var(--ink)}
 .linkmark{font-size:.7em;vertical-align:super;margin-left:1px;text-decoration:none}
-.m-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center}
-.m-bar button{flex:1;max-width:340px}
+.m-new{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--mh, 52px) + 12px);z-index:30;background:var(--accent);color:#fff;border:0;border-radius:99px;padding:10px 18px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.m-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center}
+.m-bar button{min-height:48px}
+.m-bar #mSend{flex:1;max-width:520px;font-size:16px}
+.m-gear{flex:0 0 52px}
 
 @media (max-width:900px){
   .opmain{grid-template-columns:1fr}
@@ -195,8 +220,10 @@ table.prev th{background:var(--soft);white-space:nowrap}
     <h1 id="opTitle">問題表示</h1>
     <span class="pill" id="opRoom">ルーム</span>
     <span class="pill" id="opConn">接続中…</span>
+    <span class="pill hidden" id="dictPill"></span>
     <span class="spacer"></span>
     <button id="btnPaste">問題を貼り付け</button>
+    <button id="btnEdit">問題の追加・編集</button>
     <button id="btnShare">スマホ用QR</button>
     <button id="btnDark" title="ダークモード切替">🌙</button>
     <button id="btnSettings">設定</button>
@@ -204,7 +231,7 @@ table.prev th{background:var(--soft);white-space:nowrap}
   </div>
   <div class="opmain">
     <div class="card next">
-      <div class="head"><span class="label">次に読む問題</span><span class="no" id="nextNo"></span><span class="spacer"></span><span class="muted small" id="progress"></span></div>
+      <div class="head"><span class="label">次に読む問題</span><span class="no" id="nextNo"></span><span class="spacer"></span><span class="muted small" id="progress"></span><button class="ghost small" id="btnEditQ" title="この問題を編集">✎ 編集</button></div>
       <div class="body" id="nextBody"></div>
       <div class="hint">読めない漢字・英語は、その部分をクリック（または範囲をドラッグ）すると、ルビや参考リンクを付けられます。</div>
       <div class="ctrl">
@@ -254,11 +281,11 @@ table.prev th{background:var(--soft);white-space:nowrap}
 
 <!-- ======================= スマホ画面 ======================= -->
 <div id="mobile" class="hidden">
-  <div class="m-head"><h1 id="mTitle">問題表示</h1><span class="pill" id="mConn">接続中…</span></div>
+  <div class="m-head"><div class="m-title"><div class="m-kind" id="mKind"></div><h1 id="mTitle">問題表示</h1></div><span class="pill" id="mConn">接続中…</span></div>
   <div id="mLatest"></div>
-  <div class="m-sec" id="mHistHead"></div>
   <div id="mHist"></div>
-  <div class="m-bar hidden" id="mBar"><button class="primary" id="mSend">早押しストックへ送る</button><button id="mStockSet" style="flex:0 0 auto">⚙</button></div>
+  <button class="m-new hidden" id="mNew">▲ 新しい問題</button>
+  <div class="m-bar hidden" id="mBar"><button class="primary" id="mSend">早押しストックへ送る</button><button id="mStockSet" class="m-gear" aria-label="保存先の設定">⚙</button></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1922,7 +1949,7 @@ function loadScript(src){ return new Promise((res, rej) => { const s = document.
    同期ストア（Firebase Cloud Firestore / なければ同じPC内のタブ間同期）
    ===================================================================== */
 const DEFAULT_STATE = () => ({
-  meta:{ name:'' }, qs:[], cur:0, shown:-1, showAns:false, hist:[], ann:{},
+  meta:{ name:'', setId:'' }, qs:[], cur:0, shown:'', showAns:false, ann:{}, log:[],
   disp:{ qr:true, ruby:true, autoAns:true, theme:'dark' }
 });
 function normalize(s){
@@ -1931,14 +1958,34 @@ function normalize(s){
   const out = Object.assign(d, s);
   out.meta = Object.assign(d.meta, s.meta || {});
   out.disp = Object.assign(DEFAULT_STATE().disp, s.disp || {});
-  out.qs = toArr(s.qs).filter(Boolean);
-  out.hist = toArr(s.hist).filter(v => v != null);
-  out.ann = s.ann || {};
+  // 問題には固定のID（並べ替え・追加・削除してもルビや履歴がずれないように）
+  out.qs = toArr(s.qs).filter(Boolean).map((x, i) => x.id ? x : Object.assign({}, x, { id: 'q' + i }));
+  out.ann = Object.assign({}, s.ann || {});
   for(const k in out.ann){ out.ann[k] = { q: toArr(out.ann[k] && out.ann[k].q).filter(Boolean), a: toArr(out.ann[k] && out.ann[k].a).filter(Boolean) }; }
+  out.log = toArr(s.log).filter(e => e && e.lid).sort((a, b) => (a.at || 0) - (b.at || 0));
   if(typeof out.cur !== 'number') out.cur = 0;
-  if(typeof out.shown !== 'number') out.shown = -1;
+  if(typeof out.shown !== 'string') out.shown = '';
+  delete out.hist;
   return out;
 }
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function annOf(s, id){ return s.ann[id] || { q:[], a:[] }; }
+// 読んだ問題の記録（問題集を替えても残る）
+function entryFor(s, i){
+  const q = s.qs[i], an = annOf(s, q.id);
+  return { lid: newId('L'), key: (s.meta.setId || '') + '|' + q.id, at: Date.now(), setId: s.meta.setId || '', set: s.meta.name || '',
+    qid: q.id, no: q.no, q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', ann: { q: an.q, a: an.a } };
+}
+// 同じ問題集の問題がまだあれば最新の内容（あとからのルビ・編集を反映）、なければ記録した内容
+function liveEntry(s, e){
+  if(!e) return null;
+  if(e.setId === (s.meta.setId || '')){
+    const q = s.qs.find(x => x.id === e.qid);
+    if(q){ const an = annOf(s, q.id); return Object.assign({}, e, { no: q.no, q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', ann: { q: an.q, a: an.a } }); }
+  }
+  return Object.assign({ ann: { q: [], a: [] } }, e, { ann: { q: toArr(e.ann && e.ann.q), a: toArr(e.ann && e.ann.a) } });
+}
+function shownEntry(s){ return s.shown ? liveEntry(s, s.log.find(e => e.lid === s.shown)) : null; }
 function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.keys(v).sort((a,b)=>a-b).map(k => v[k]); }
 function setPath(obj, path, val){
   const ks = path.split('/'); let o = obj;
@@ -1959,17 +2006,19 @@ class Store {
         await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
         await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
         const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
-        const fs = app.firestore();
+        const fs = app.firestore(); this.fs = fs;
         // Firestore：コレクション qd_rooms に 1ルームあたり3つの文書（進行状態／問題／ルビ）
         const col = fs.collection('qd_rooms');
         this.docs = { st: col.doc(this.room), qs: col.doc(this.room + '_qs'), ann: col.doc(this.room + '_ann') };
-        this.parts = { st: {}, qs: [], ann: {} };
+        this.parts = { st: {}, qs: [], ann: {}, log: [] };
+        this.logCol = fs.collection('qd_log');
         this.mode = 'firebase';
-        const compose = () => { this.s = normalize(Object.assign({}, this.parts.st, { qs: this.parts.qs, ann: this.parts.ann })); this.emit(); };
+        const compose = () => { this.s = normalize(Object.assign({}, this.parts.st, { qs: this.parts.qs, ann: this.parts.ann, log: this.parts.log })); this.emit(); };
         const onErr = err => { console.error(err); toast('Firebase の読み込みに失敗：' + err.code); };
         this.docs.st.onSnapshot({ includeMetadataChanges: true }, snap => { this.connected = !snap.metadata.fromCache; this.parts.st = snap.data() || {}; compose(); }, onErr);
         this.docs.qs.onSnapshot(snap => { this.parts.qs = (snap.data() || {}).qs || []; compose(); }, onErr);
         this.docs.ann.onSnapshot(snap => { this.parts.ann = (snap.data() || {}).ann || {}; compose(); }, onErr);
+        this.logCol.where('room', '==', this.room).onSnapshot(snap => { this.parts.log = snap.docs.map(d => d.data()); compose(); }, onErr);
         return;
       }catch(e){ console.error(e); toast('Firebase に接続できません。同じPC内のみで動作します'); }
     }
@@ -1999,9 +2048,29 @@ class Store {
       this.docs.st.set(st, { merge: true }).catch(fail);
       if(hasAnn) this.docs.ann.set(ann, { merge: true }).catch(fail);
     }else{
-      LS.set(this.key, this.s);
-      if(this.bc) this.bc.postMessage(1);
+      this.saveLocal();
     }
+    this.emit();
+  }
+  saveLocal(){ LS.set(this.key, this.s); if(this.bc) this.bc.postMessage(1); }
+  // 読んだ問題を履歴に追加（同じ問題の古い記録は消す）
+  addLog(entry){
+    const dups = this.s.log.filter(x => x.key === entry.key);
+    this.s.log = this.s.log.filter(x => x.key !== entry.key).concat([entry]);
+    if(this.mode === 'firebase'){
+      dups.forEach(d => this.logCol.doc(d.lid).delete().catch(() => {}));
+      this.logCol.doc(entry.lid).set(Object.assign({ room: this.room }, clean(entry))).catch(e => toast('履歴の保存に失敗：' + (e.code || e.message)));
+    }else{
+      this.s.log = this.s.log.slice(-1000);
+      this.saveLocal();
+    }
+  }
+  async clearLog(){
+    const all = this.s.log.slice();
+    this.s.log = [];
+    if(this.mode === 'firebase'){
+      for(let i = 0; i < all.length; i += 400){ const b = this.fs.batch(); all.slice(i, i + 400).forEach(e => b.delete(this.logCol.doc(e.lid))); await b.commit().catch(e => toast('削除に失敗：' + e.code)); }
+    }else this.saveLocal();
     this.emit();
   }
 }
@@ -2096,7 +2165,8 @@ function buildQuestions(info, map){
 /* =====================================================================
    カッコ書きのふりがな → ルビ（例：草薙剣（くさなぎのつるぎ） → 草薙剣 にルビ）
    ===================================================================== */
-const KANA_ONLY = /^[\p{Script=Hiragana}\p{Script=Katakana}ー・゠\s]+$/u;
+const KANA_ONLY = /^[\p{Script=Hiragana}\p{Script=Katakana}ー・･゠\s]+$/u;
+const NAME_SEP = /[・･\s]/;
 const PARTICLES = 'のがをにはとでもへやか';
 const isKanji = ch => /[\p{Script=Han}々〆ヶヵ]/u.test(ch || '');
 const isHira = ch => /\p{Script=Hiragana}/u.test(ch || '');
@@ -2109,8 +2179,29 @@ function extractParenRuby(text){
   while((m = re.exec(text))){
     const reading = m[1].trim(), p = m.index;
     if(!reading || !KANA_ONLY.test(reading)) continue;
-    let b = p;
+    let b = p, rd = reading;
     if(isKanji(text[b-1])){
+      // 人名など「いとう・ひろぶみ」のように中黒で区切られた読み
+      const parts = reading.split(/[・･\s]+/).filter(Boolean);
+      if(parts.length >= 2){
+        // 本文側も「伊藤・博文」と区切られていれば、部分ごとにルビ
+        const segs = []; let q = p, ok = true;
+        for(let k = parts.length - 1; k >= 0; k--){
+          const e2 = q; while(q > 0 && isKanji(text[q-1])) q--;
+          if(q === e2){ ok = false; break; }
+          segs.unshift([q, e2]);
+          if(k > 0){ if(NAME_SEP.test(text[q-1] || '')) q--; else { ok = false; break; } }
+        }
+        if(ok && q >= last){
+          out += text.slice(last, p);
+          const off = out.length - (p - q);
+          segs.forEach(([a, e2], k) => anns.push({ s: off + (a - q), e: off + (e2 - q), r: parts[k], l: '' }));
+          last = p + m[0].length;
+          continue;
+        }
+        // 本文がつながっている（伊藤博文）なら中黒を取って1つのルビに（カタカナの外国人名はそのまま）
+        if(!/\p{Script=Katakana}/u.test(reading.replace(/ー/g, ''))) rd = parts.join('');
+      }
       while(b > 0 && isKanji(text[b-1])) b--;
       // 送りがなをはさむ語（掛け軸・思い出 など）は前の漢字までのばす
       for(;;){
@@ -2129,17 +2220,34 @@ function extractParenRuby(text){
     }else continue;
     if(b < last) continue;
     out += text.slice(last, p);
-    anns.push({ s: out.length - (p - b), e: out.length, r: reading, l: '' });
+    anns.push({ s: out.length - (p - b), e: out.length, r: rd, l: '' });
     last = p + m[0].length;
   }
   out += text.slice(last);
   return { text: out, anns };
 }
+// 文を書き換えたとき、既存のルビを同じ文字列の位置へ移す（見つからないものは消す）
+function remapAnns(oldText, newText, anns){
+  const out = [];
+  (anns || []).forEach(a => {
+    const base = String(oldText).slice(a.s, a.e); if(!base) return;
+    if(newText.slice(a.s, a.e) === base){ out.push(a); return; }
+    let best = -1, idx = newText.indexOf(base);
+    while(idx >= 0){ if(best < 0 || Math.abs(idx - a.s) < Math.abs(best - a.s)) best = idx; idx = newText.indexOf(base, idx + 1); }
+    if(best >= 0) out.push(Object.assign({}, a, { s: best, e: best + base.length }));
+  });
+  return out;
+}
+function mergeAnns(primary, extra){
+  const out = primary.slice();
+  extra.forEach(a => { if(!out.some(b => a.s < b.e && a.e > b.s)) out.push(a); });
+  return out.sort((x, y) => x.s - y.s);
+}
 function convertParenRuby(qs){
   const ann = {};
   const out = qs.map((x, i) => {
     const q = extractParenRuby(x.q), a = extractParenRuby(x.a);
-    if(q.anns.length || a.anns.length) ann['q' + i] = { q: q.anns, a: a.anns };
+    if(q.anns.length || a.anns.length) ann[x.id] = { q: q.anns, a: a.anns };
     return Object.assign({}, x, { q: q.text, a: a.text });
   });
   return { qs: out, ann };
@@ -2149,12 +2257,31 @@ function convertParenRuby(qs){
    ルビ候補（辞書：kuromoji.js ／ AI：Claude API キーを設定したとき）
    ===================================================================== */
 const KURO_BASE = window.__KURO_BASE || 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/';
-let kuroP = null;
+// 辞書の読み込み・解析は Web Worker（裏側）で行い、画面が固まらないようにする
+let kuroP = null, dictState = 'none';
+function setDictState(st){ dictState = st; const el = $('#dictPill'); if(!el) return;
+  el.textContent = { loading:'辞書：準備中…', ready:'辞書：OK', error:'辞書：読み込み失敗' }[st] || '';
+  el.className = 'pill ' + (st === 'ready' ? 'on' : st === 'error' ? 'off' : ''); el.classList.toggle('hidden', st === 'none'); }
 function getTokenizer(){
   if(!kuroP){
-    kuroP = loadScript(KURO_BASE + 'build/kuromoji.js').then(() => new Promise((res, rej) =>
-      kuromoji.builder({ dicPath: KURO_BASE + 'dict/' }).build((err, t) => err ? rej(err) : res(t))));
-    kuroP.catch(() => { kuroP = null; });
+    setDictState('loading');
+    kuroP = new Promise((res, rej) => {
+      const code = `importScripts(${JSON.stringify(KURO_BASE + 'build/kuromoji.js')});
+        let tk = null, err = null;
+        kuromoji.builder({ dicPath: ${JSON.stringify(KURO_BASE + 'dict/')} }).build((e, t) => { if(e){ err = String(e); postMessage({ ready:false, err }); } else { tk = t; postMessage({ ready:true }); } });
+        onmessage = ev => { const { id, text } = ev.data; postMessage({ id, toks: tk ? tk.tokenize(text).map(k => ({ surface_form: k.surface_form, reading: k.reading })) : null }); };`;
+      let w;
+      try{ w = new Worker(URL.createObjectURL(new Blob([code], { type:'text/javascript' }))); }catch(e){ rej(e); return; }
+      let seq = 0; const waits = {};
+      w.onerror = e => rej(new Error(e.message || 'worker error'));
+      w.onmessage = ev => {
+        const d = ev.data;
+        if(d.ready === true) res({ tokenize: text => new Promise(r => { const id = ++seq; waits[id] = r; w.postMessage({ id, text }); }) });
+        else if(d.ready === false) rej(new Error(d.err));
+        else if(d.id && waits[d.id]){ waits[d.id](d.toks || []); delete waits[d.id]; }
+      };
+    });
+    kuroP.then(() => setDictState('ready'), () => { setDictState('error'); kuroP = null; });
   }
   return kuroP;
 }
@@ -2172,13 +2299,13 @@ async function dictReading(text, s, e){
   const word = text.slice(s, e);
   if(!/[\p{Script=Han}々]/u.test(word)) return null;
   let pos = 0, inside = [], clean = true;
-  for(const k of t.tokenize(text)){
+  for(const k of await t.tokenize(text)){
     const ks = pos, ke = pos + k.surface_form.length; pos = ke;
     if(ke <= s || ks >= e) continue;
     if(ks < s || ke > e) clean = false;
     inside.push(k);
   }
-  const r = clean ? readTokens(inside) : readTokens(t.tokenize(word));
+  const r = clean ? readTokens(inside) : readTokens(await t.tokenize(word));
   return r && r !== toHira(word) ? r : null;
 }
 async function aiReadings(text, s, e){
@@ -2244,15 +2371,23 @@ async function initOp(){
 
   $('#btnOpenScreen').onclick = () => window.open(viewUrl('screen', room, true), 'qd-screen-' + room, 'width=1280,height=720');
   $('#btnPaste').onclick = openPaste;
+  $('#btnEdit').onclick = () => openEditor(Math.min(store.s.cur, store.s.qs.length - 1));
+  $('#btnEditQ').onclick = () => openEditor(store.s.cur);
   $('#btnSettings').onclick = openSettings;
   $('#btnShare').onclick = openShare;
   $('#btnRead').onclick = doRead;
   $('#btnSkip').onclick = () => moveCur(1);
   $('#btnPrev').onclick = () => moveCur(-1);
   $('#btnToggleAns').onclick = () => store.update({ showAns: !store.s.showAns });
-  $('#btnClear').onclick = () => store.update({ shown: -1 });
+  $('#btnClear').onclick = () => store.update({ shown: '' });
   $('#chkAutoAns').onchange = e => store.update({ 'disp/autoAns': e.target.checked });
-  $('#qlist').onclick = e => { const li = e.target.closest('li[data-i]'); if(li){ store.update({ cur: +li.dataset.i }); toast('No. ' + store.s.qs[+li.dataset.i].no + ' を「次に読む問題」にしました'); } };
+  $('#qlist').onclick = e => {
+    const li = e.target.closest('li[data-lid]'); if(!li) return;
+    const s = store.s, en = s.log.find(x => x.lid === li.dataset.lid); if(!en) return;
+    const i = en.setId === (s.meta.setId || '') ? s.qs.findIndex(x => x.id === en.qid) : -1;
+    if(i < 0){ toast('別の問題集（' + (en.set || '無題') + '）の問題です'); return; }
+    store.update({ cur: i }); toast('No. ' + s.qs[i].no + ' を「次に読む問題」にしました');
+  };
   const jump = () => { const v = $('#jumpNo').value.trim(); if(!v) return; const z = v.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
     const i = store.s.qs.findIndex(x => String(x.no).trim() === z || String(x.no).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim() === z);
     if(i < 0){ toast('No. ' + v + ' が見つかりません'); return; } store.update({ cur: i }); $('#jumpNo').value = ''; $('#jumpNo').blur(); };
@@ -2276,13 +2411,16 @@ async function initOp(){
   document.addEventListener('mousedown', e => { const p = $('.annpop'); if(p && !p.contains(e.target)) p.remove(); });
 
   if(!store.s.qs.length) setTimeout(openPaste, 300);
+  // 最初のクリックで待たないよう、辞書を裏で先に準備しておく
+  setTimeout(() => { getTokenizer().catch(() => {}); }, 1500);
 }
 function setOpDark(on){ document.body.classList.toggle('dark', !!on); LS.set('qd:opdark', !!on); const b = $('#btnDark'); if(b) b.textContent = on ? '☀' : '🌙'; }
 function moveCur(d){ const s = store.s; const n = s.qs.length; if(!n) return; store.update({ cur: Math.max(0, Math.min(n, s.cur + d)) }); }
 function doRead(){
   const s = store.s; if(s.cur >= s.qs.length) return;
-  const hist = s.hist.filter(i => i !== s.cur).concat([s.cur]);
-  store.update({ shown: s.cur, hist, cur: s.cur + 1, showAns: !!s.disp.autoAns });
+  const en = entryFor(s, s.cur);
+  store.addLog(en);
+  store.update({ shown: en.lid, cur: s.cur + 1, showAns: !!s.disp.autoAns });
 }
 let lastListSig = '';
 function renderOp(s){
@@ -2292,8 +2430,9 @@ function renderOp(s){
   $('#opRoom').textContent = 'ルーム ' + store.room;
   $('#opTitle').textContent = s.meta.name || '問題表示';
   $('#chkAutoAns').checked = !!s.disp.autoAns;
-  const n = s.qs.length;
-  $('#progress').textContent = n ? `読了 ${new Set(s.hist).size} / ${n}問` : '';
+  const n = s.qs.length, setId = s.meta.setId || '';
+  const readIds = new Set(s.log.filter(e => e.setId === setId).map(e => e.qid));
+  $('#progress').textContent = n ? `読了 ${s.qs.filter(x => readIds.has(x.id)).length} / ${n}問` : '';
   const q = s.qs[s.cur];
   const body = $('#nextBody');
   if(!n){
@@ -2301,29 +2440,34 @@ function renderOp(s){
     body.innerHTML = '<div class="empty">まだ問題がありません。<br>Excel やスプレッドシートで問題の範囲をコピーして、<br>「問題を貼り付け」から貼り付けてください。</div>';
   }else if(!q){
     $('#nextNo').textContent = '';
-    body.innerHTML = '<div class="empty">最後の問題まで読み終わりました。</div>';
+    body.innerHTML = '<div class="empty">最後の問題まで読み終わりました。<br>「問題の追加・編集」から問題を足すこともできます。</div>';
   }else{
-    const an = s.ann['q' + s.cur] || { q:[], a:[] };
-    $('#nextNo').textContent = 'No. ' + q.no;
+    const an = annOf(s, q.id);
+    $('#nextNo').textContent = 'No. ' + q.no + (readIds.has(q.id) ? '（読了済み）' : '');
     body.innerHTML = `<div id="nextQ" class="qtext" data-k="q">${renderText(q.q, an.q, { links:true })}</div>
       <div class="ansrow"><span class="k">答</span><span class="a qtext" data-k="a">${renderText(q.a, an.a, { links:true })}</span>
       ${q.alt ? `<div class="meta">別解：${esc(q.alt)}</div>` : ''}${q.note ? `<div class="meta">${esc(q.note)}</div>` : ''}</div>`;
   }
   $('#btnRead').disabled = !q;
+  $('#btnEditQ').classList.toggle('hidden', !q);
   $('#btnPrev').disabled = s.cur <= 0;
   $('#btnSkip').disabled = s.cur >= n;
-  const sq = s.qs[s.shown];
-  $('#nowLabel').textContent = sq ? `投影中：No. ${sq.no}` : '投影中：なし';
-  $('#nowQ').textContent = sq ? sq.q : '';
+  const se = shownEntry(s);
+  $('#nowLabel').textContent = se ? `投影中：No. ${se.no}` + (se.setId !== setId ? `（${se.set || '無題'}）` : '') : '投影中：なし';
+  $('#nowQ').textContent = se ? se.q : '';
   $('#btnToggleAns').textContent = s.showAns ? '答えを隠す (A)' : '答えを表示 (A)';
-  $('#btnToggleAns').disabled = !sq;
+  $('#btnToggleAns').disabled = !se;
 
-  const read = new Set(s.hist);
-  const sig = JSON.stringify([n, s.cur, s.shown, s.hist, s.meta.name]);
+  const last = s.log[s.log.length - 1];
+  const sig = JSON.stringify([s.log.length, last && last.lid, s.shown, setId, s.qs.length]);
   if(sig !== lastListSig){
     lastListSig = sig;
-    const recent = s.hist.slice().reverse();
-    $('#qlist').innerHTML = recent.length ? recent.map((i, k) => { const x = s.qs[i]; return x ? `<li data-i="${i}" class="${k === 0 ? 'latest' : ''} ${i === s.shown ? 'shown' : ''}" title="クリックで「次に読む問題」にします"><span class="n">${esc(x.no)}</span><span class="t">${esc(x.q)}</span></li>` : ''; }).join('') : '<li class="none">まだ読んだ問題はありません</li>';
+    const recent = s.log.slice().reverse().slice(0, 300);
+    $('#qlist').innerHTML = recent.length ? recent.map((e, k) => {
+      const other = e.setId !== setId;
+      const le = liveEntry(s, e);
+      return `<li data-lid="${esc(e.lid)}" class="${k === 0 ? 'latest' : ''} ${e.lid === s.shown ? 'shown' : ''} ${other ? 'other' : ''}" title="${other ? '別の問題集の問題' : 'クリックで「次に読む問題」にします'}"><span class="n">${esc(le.no)}</span><span class="t">${other ? `<span class="set">${esc(e.set || '無題')}</span>` : ''}${esc(le.q)}</span></li>`;
+    }).join('') : '<li class="none">まだ読んだ問題はありません</li>';
     $('#qlist').scrollTop = 0;
   }
 }
@@ -2394,7 +2538,8 @@ function onTextPick(ev){
 }
 function openAnnEditor(qi, k, text, range){
   const s = store.s;
-  const cur = (s.ann['q' + qi] || { q:[], a:[] })[k];
+  const qid = s.qs[qi].id;
+  const cur = annOf(s, qid)[k];
   const exist = cur.find(a => a.s === range.s && a.e === range.e) || {};
   let { s: rs, e: re } = range;
   const m = modal(`<h2>ルビ・参考リンク</h2>
@@ -2427,8 +2572,11 @@ function openAnnEditor(qi, k, text, range){
     notes.push('候補を探しています…'); show(); notes.length = 0;
     const jobs = [];
     if(LS.get('qd:aiKey', '')) jobs.push(aiReadings(text, ss, ee).then(rs2 => { (rs2 || []).forEach(r => cands.unshift({ r, src:'AI' })); }).catch(err => { notes.push('AI候補を取得できませんでした（' + esc(err.message) + '）'); }));
+    if(dictState === 'loading') notes.push('辞書を準備中です（初回は少しかかります）…');
+    show();
     jobs.push(dictReading(text, ss, ee).then(r => { if(r) cands.push({ r, src:'辞書' }); }).catch(() => { notes.push('辞書を読み込めませんでした'); }));
     await Promise.all(jobs);
+    { const k = notes.findIndex(n => n.startsWith('辞書を準備中')); if(k >= 0) notes.splice(k, 1); }
     // AI候補を先頭に並べ直す
     cands.sort((a, b) => (a.src === 'AI' ? 0 : 1) - (b.src === 'AI' ? 0 : 1));
     if(!cands.length && !notes.length) notes.push('候補が見つかりませんでした。直接入力してください');
@@ -2454,7 +2602,7 @@ function openAnnEditor(qi, k, text, range){
     let list = cur.filter(a => !(a.s < re && a.e > rs) && !(a.s === range.s && a.e === range.e));
     if(!remove && (r || l)) list.push({ s: rs, e: re, r, l });
     list.sort((x, y) => x.s - y.s);
-    store.update({ ['ann/q' + qi + '/' + k]: list });
+    store.update({ ['ann/' + qid + '/' + k]: list });
     closeModal();
   };
   m.querySelector('#annSave').onclick = () => save(false);
@@ -2486,16 +2634,23 @@ function openPaste(){
       <div class="field"><span class="lab">列の割り当て（自動で推測しています。違っていたら直してください）</span><div class="maprow" id="pMapRow"></div></div>
       <div class="field"><span class="lab" id="pCount"></span><div class="prevwrap"><table class="prev" id="pPrev"></table></div></div>
     </div>
+    ${s.qs.length ? `<div class="field"><span class="lab">反映のしかた</span>
+      <label class="chk"><input type="radio" name="pMode" value="replace" checked> 新しい問題集として置き換える（読んだ問題の履歴は残ります）</label>
+      <label class="chk"><input type="radio" name="pMode" value="append"> 今の問題集（${s.qs.length}問）の最後に追加する</label></div>` : ''}
     <label class="chk" style="margin-bottom:10px"><input type="checkbox" id="pParen" ${LS.get('qd:parenRuby', true) ? 'checked' : ''}> カッコ書きのふりがな（例：草薙剣（くさなぎのつるぎ））を消して、自動でルビにする</label>
-    ${s.qs.length ? '<div class="muted small">※ 今の問題（' + s.qs.length + '問）とルビ・読了状況は置き換わります。</div>' : ''}
     <div class="foot"><button id="pCancel">キャンセル</button><button class="primary" id="pOk" disabled>この内容で反映</button></div>`);
   let info = null, map = {};
   const ta = m.querySelector('#pText');
   const colOpts = sel => '<option value="-1">（なし）</option>' + [...Array(info.ncol).keys()].map(j => `<option value="${j}" ${sel === j ? 'selected' : ''}>${esc(info.header ? (info.header[j] || `列${j+1}`) : `列${j+1}`)}${info.header ? '' : '：' + esc((info.rows[0][j] || '').slice(0, 10))}</option>`).join('');
-  const build = () => { const raw = buildQuestions(info, map); return m.querySelector('#pParen').checked ? convertParenRuby(raw) : { qs: raw, ann: {} }; };
+  const mode = () => { const r = m.querySelector('input[name=pMode]:checked'); return r ? r.value : 'replace'; };
+  const build = () => {
+    const app = mode() === 'append';
+    const raw = buildQuestions(info, map).map((x, i) => Object.assign(x, { id: app ? newId('n') + i : 'q' + i }));
+    return m.querySelector('#pParen').checked ? convertParenRuby(raw) : { qs: raw, ann: {} };
+  };
   const preview = () => {
     const { qs, ann } = build();
-    const rt = (i, k) => renderText(qs[i][k], (ann['q' + i] || {})[k] || []);
+    const rt = (i, k) => renderText(qs[i][k], (ann[qs[i].id] || {})[k] || []);
     m.querySelector('#pCount').textContent = `プレビュー（${qs.length}問）`;
     m.querySelector('#pPrev').innerHTML = '<tr><th>番号</th><th>問題文</th><th>答え</th><th>別解</th><th>備考</th></tr>' +
       qs.slice(0, 30).map((x, i) => `<tr><td>${esc(x.no)}</td><td>${rt(i, 'q')}</td><td>${rt(i, 'a')}</td><td>${esc(x.alt)}</td><td>${esc(x.note)}</td></tr>`).join('');
@@ -2516,11 +2671,122 @@ function openPaste(){
   setTimeout(() => ta.focus(), 50);
   m.querySelector('#pCancel').onclick = closeModal;
   m.querySelector('#pParen').onchange = e => { LS.set('qd:parenRuby', e.target.checked); if(info) preview(); };
+  m.querySelectorAll('input[name=pMode]').forEach(r => r.onchange = () => { if(info) preview(); });
   m.querySelector('#pOk').onclick = () => {
     const { qs, ann } = build();
-    store.update({ qs, 'meta/name': m.querySelector('#pName').value.trim(), cur: 0, shown: -1, hist: [], ann, showAns: false });
-    closeModal(); toast(qs.length + '問を反映しました');
+    const name = m.querySelector('#pName').value.trim();
+    if(mode() === 'append'){
+      const patch = { qs: store.s.qs.concat(qs), 'meta/name': name || store.s.meta.name };
+      for(const id in ann) patch['ann/' + id] = ann[id];
+      store.update(patch);
+      closeModal(); toast(qs.length + '問を追加しました');
+    }else{
+      store.update({ qs, 'meta/name': name, 'meta/setId': newId('S'), cur: 0, shown: '', ann, showAns: false });
+      closeModal(); toast(qs.length + '問を反映しました');
+    }
   };
+}
+
+/* ---------- 問題の追加・編集 ---------- */
+function openEditor(startIdx){
+  let sel = -1, insertAt = -1, filter = '';
+  const m = modal(`<h2>問題の追加・編集</h2>
+    <div class="edgrid">
+      <div class="edleft">
+        <input type="text" id="edSearch" placeholder="番号・問題文・答えで絞り込み">
+        <ul class="edlist" id="edList"></ul>
+        <button id="edAddEnd">＋ 最後に問題を追加</button>
+      </div>
+      <div class="edright">
+        <div class="lab small muted" id="edMode"></div>
+        <div class="grid2" style="grid-template-columns:120px 1fr">
+          <label class="field"><span class="lab">番号</span><input type="text" id="edNo"></label>
+          <label class="field"><span class="lab">答え</span><input type="text" id="edA"></label>
+        </div>
+        <label class="field"><span class="lab">問題文</span><textarea id="edQ" rows="5"></textarea></label>
+        <div class="muted small" id="edRubies" style="margin:-6px 0 10px"></div>
+        <div class="grid2">
+          <label class="field"><span class="lab">別解</span><input type="text" id="edAlt"></label>
+          <label class="field"><span class="lab">備考</span><input type="text" id="edNote"></label>
+        </div>
+        <label class="chk small"><input type="checkbox" id="edParen" ${LS.get('qd:parenRuby', true) ? 'checked' : ''}> カッコ書きのふりがなを自動でルビにする</label>
+        <div class="foot" style="justify-content:flex-start">
+          <button class="danger" id="edDel">削除</button>
+          <button id="edIns">この問題の後ろに追加</button>
+          <button id="edNext">次に読む問題にする</button>
+          <span class="spacer" style="flex:1"></span>
+          <button class="primary" id="edSave">保存</button>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><button id="edClose">閉じる</button></div>`, 'wide');
+  const $m = q => m.querySelector(q);
+  const list = () => {
+    const s = store.s, f = filter.trim();
+    const readIds = new Set(s.log.filter(e => e.setId === (s.meta.setId || '')).map(e => e.qid));
+    $m('#edList').innerHTML = s.qs.map((x, i) => (!f || (x.no + ' ' + x.q + ' ' + x.a).includes(f)) ?
+      `<li data-i="${i}" class="${i === sel ? 'sel' : ''} ${i === s.cur ? 'cur' : ''}"><span class="n">${esc(x.no)}${readIds.has(x.id) ? ' ✓' : ''}</span><span class="t">${esc(x.q)}</span></li>` : '').join('') || '<li class="muted">該当なし</li>';
+  };
+  const load = i => {
+    const s = store.s; sel = i; insertAt = -1;
+    const x = s.qs[i] || { no:'', q:'', a:'', alt:'', note:'' };
+    $m('#edNo').value = x.no; $m('#edQ').value = x.q; $m('#edA').value = x.a; $m('#edAlt').value = x.alt || ''; $m('#edNote').value = x.note || '';
+    $m('#edMode').textContent = s.qs[i] ? `No. ${x.no} を編集中` + (i === s.cur ? '（次に読む問題）' : '') : '';
+    const an = s.qs[i] ? annOf(s, x.id) : { q:[], a:[] };
+    const rl = [...an.q.map(a => [x.q, a]), ...an.a.map(a => [x.a, a])].filter(([, a]) => a.r).map(([t, a]) => esc(t.slice(a.s, a.e)) + '（' + esc(a.r) + '）');
+    $m('#edRubies').innerHTML = rl.length ? 'ルビ：' + rl.join('、') + '　<span>※文を直してもルビは残ります</span>' : '';
+    ['#edDel', '#edIns', '#edNext'].forEach(q => $m(q).disabled = !s.qs[i]);
+    $m('#edDel').textContent = '削除'; delete $m('#edDel').dataset.arm;
+    list();
+    const li = $m(`#edList li[data-i="${i}"]`); if(li) li.scrollIntoView({ block:'nearest' });
+  };
+  const startNew = at => {
+    const s = store.s; sel = -1; insertAt = at;
+    const prev = s.qs[at - 1];
+    const guess = prev && /^\d+$/.test(String(prev.no).trim()) ? String(+prev.no + 1) : String(at + 1);
+    $m('#edNo').value = guess; ['#edQ', '#edA', '#edAlt', '#edNote'].forEach(q => $m(q).value = '');
+    $m('#edRubies').innerHTML = '読み方は「草薙剣（くさなぎのつるぎ）」のようにカッコで書くと、自動でルビになります';
+    $m('#edMode').textContent = `新しい問題（${at >= s.qs.length ? '最後' : (prev ? 'No. ' + prev.no + ' の後ろ' : '先頭')}に追加）`;
+    ['#edDel', '#edIns', '#edNext'].forEach(q => $m(q).disabled = true);
+    list(); $m('#edQ').focus();
+  };
+  $m('#edList').onclick = e => { const li = e.target.closest('li[data-i]'); if(li) load(+li.dataset.i); };
+  $m('#edSearch').oninput = e => { filter = e.target.value; list(); };
+  $m('#edAddEnd').onclick = () => startNew(store.s.qs.length);
+  $m('#edIns').onclick = () => startNew(sel + 1);
+  $m('#edNext').onclick = () => { store.update({ cur: sel }); toast('「次に読む問題」にしました'); list(); };
+  $m('#edParen').onchange = e => LS.set('qd:parenRuby', e.target.checked);
+  $m('#edDel').onclick = e => {
+    const b = e.currentTarget, s = store.s; if(sel < 0) return;
+    if(!b.dataset.arm){ b.dataset.arm = 1; b.textContent = 'もう一度押すと削除'; return; }
+    const x = s.qs[sel], qs = s.qs.slice(); qs.splice(sel, 1);
+    const cur = sel < s.cur ? s.cur - 1 : s.cur;
+    store.update({ qs, cur: Math.min(cur, qs.length), ['ann/' + x.id]: null });
+    toast('No. ' + x.no + ' を削除しました');
+    load(Math.min(sel, qs.length - 1));
+  };
+  $m('#edSave').onclick = () => {
+    const s = store.s;
+    let qText = $m('#edQ').value.replace(/\r\n?/g, '\n').trim(), aText = $m('#edA').value.trim();
+    if(!qText){ toast('問題文を入れてください'); return; }
+    const old = sel >= 0 ? s.qs[sel] : null;
+    const id = old ? old.id : newId('n');
+    const oldAnn = old ? annOf(s, old.id) : { q:[], a:[] };
+    let pq = { text: qText, anns: [] }, pa = { text: aText, anns: [] };
+    if($m('#edParen').checked){ pq = extractParenRuby(qText); pa = extractParenRuby(aText); }
+    const ann = { q: mergeAnns(pq.anns, remapAnns(old ? old.q : '', pq.text, oldAnn.q)), a: mergeAnns(pa.anns, remapAnns(old ? old.a : '', pa.text, oldAnn.a)) };
+    const item = { id, no: $m('#edNo').value.trim() || String((sel >= 0 ? sel : insertAt) + 1), q: pq.text, a: pa.text, alt: $m('#edAlt').value.trim(), note: $m('#edNote').value.trim() };
+    const qs = s.qs.slice(); let cur = s.cur, idx;
+    if(old){ qs[sel] = item; idx = sel; }
+    else{ idx = Math.max(0, Math.min(insertAt, qs.length)); qs.splice(idx, 0, item); if(idx < cur) cur++; }
+    const patch = { qs, cur, ['ann/' + id]: ann };
+    if(!s.meta.setId) patch['meta/setId'] = newId('S');
+    store.update(patch);
+    toast(old ? '保存しました' : '追加しました');
+    load(idx);
+  };
+  $m('#edClose').onclick = closeModal;
+  if(store.s.qs.length && startIdx >= 0) load(Math.min(startIdx, store.s.qs.length - 1)); else startNew(store.s.qs.length);
 }
 
 /* ---------- スマホ用QR ---------- */
@@ -2556,7 +2822,9 @@ function openSettings(){
         <div class="field"><span class="lab">操作画面の文字の大きさ</span><input type="range" id="sOpSize" min="18" max="48" value="${LS.get('qd:opsize', 30)}" style="width:100%"></div>
         <div class="field"><span class="lab">ルーム</span>
           <div style="display:flex;gap:8px"><input type="text" id="sRoom" value="${esc(store.room)}" style="text-transform:uppercase"><button id="sRoomGo">移動</button><button id="sRoomNew">新規</button></div>
-          <div class="muted small" style="margin-top:4px">ルームごとに問題・ルビ・進行状況が保存されます。</div></div>
+          <div class="muted small" style="margin-top:4px">ふだんは同じルームのままで大丈夫です（問題集を替えても、読んだ問題の履歴は残ります）。</div></div>
+        <div class="field"><span class="lab">読んだ問題の履歴（${s.log.length}問）</span><button class="danger" id="sClearLog">履歴をすべて消す</button>
+          <div class="muted small" style="margin-top:4px">操作画面の右下とスマホに出る履歴が消えます。</div></div>
       </div>
       <div>
         <div class="field"><span class="lab">AI のルビ候補（任意）</span>
@@ -2573,6 +2841,12 @@ function openSettings(){
   m.querySelector('#sRoomGo').onclick = () => { const r = m.querySelector('#sRoom').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ''); if(r) goRoom(r); };
   m.querySelector('#sRoomNew').onclick = () => goRoom(randRoom());
   m.querySelector('#sDark').onchange = e => setOpDark(e.target.checked);
+  m.querySelector('#sClearLog').onclick = e => {
+    const b = e.currentTarget;
+    if(!b.dataset.arm){ b.dataset.arm = 1; b.textContent = 'もう一度押すと消します'; return; }
+    store.clearLog().then(() => { store.update({ shown: '' }); toast('履歴を消しました'); });
+    b.textContent = '消しました'; b.disabled = true;
+  };
   m.querySelector('#sCancel').onclick = closeModal;
   m.querySelector('#sSave').onclick = () => {
     LS.set('qd:aiKey', m.querySelector('#sAiKey').value.trim());
@@ -2608,9 +2882,9 @@ async function initScreen(){
 function renderScreen(s){
   const d = s.disp;
   $('#screen').classList.toggle('light', d.theme === 'light');
-  $('#scSet').textContent = s.meta.name || '';
-  const q = s.qs[s.shown];
-  const an = s.ann['q' + s.shown] || { q:[], a:[] };
+  const q = shownEntry(s);
+  $('#scSet').textContent = q ? (q.set || '') : (s.meta.name || '');
+  const an = q ? q.ann : { q:[], a:[] };
   if(q){
     $('#scNo').textContent = q.no;
     $('#scQin').innerHTML = renderText(q.q, an.q, { ruby: d.ruby });
@@ -2636,24 +2910,25 @@ function fitOne(box, inner, minVh, maxVh){
   let lo = minVh * vh, hi = maxVh * vh;
   inner.style.fontSize = hi + 'px';
   if(inner.scrollHeight <= box.clientHeight) return;
-  for(let i = 0; i < 12; i++){ const mid = (lo + hi) / 2; inner.style.fontSize = mid + 'px'; if(inner.scrollHeight <= box.clientHeight) lo = mid; else hi = mid; }
+  for(let i = 0; i < 16; i++){ const mid = (lo + hi) / 2; inner.style.fontSize = mid + 'px'; if(inner.scrollHeight <= box.clientHeight) lo = mid; else hi = mid; }
   inner.style.fontSize = lo + 'px';
 }
 function fitScreen(){
-  fitOne($('#scQ'), $('#scQin'), 2.4, 5.6);
-  fitOne($('#scAP'), $('#scAin'), 2.6, 6.4);
-  fitOne($('#scLP'), $('#scLin'), 2, 3.9);
+  // 長い文は全文が収まるまで小さくする
+  fitOne($('#scQ'), $('#scQin'), 0.8, 5.6);
+  fitOne($('#scAP'), $('#scAin'), 0.8, 6.4);
+  fitOne($('#scLP'), $('#scLin'), 0.8, 3.9);
   const no = $('#scNo'); if(no){ no.style.fontSize = ''; const w = no.parentElement.clientWidth * 0.94; let f = 14; while(no.scrollWidth > w && f > 5){ f -= .5; no.style.fontSize = f + 'vh'; } }
 }
 
 /* =====================================================================
    スマホ画面（みんな用 / 自分用）
    ===================================================================== */
-let IS_ME = false;
+let IS_ME = false, lastLatest = '';
 async function initMobile(me){
   IS_ME = me;
   $('#mobile').classList.remove('hidden');
-  document.body.style.background = 'var(--bg)';
+  document.body.classList.add('mview');
   const room = (params.get('room') || '').toUpperCase();
   // 設定情報(fb)をURLから消しておく（ブックマークしやすくするため。設定は端末に保存済み）
   if(params.get('fb')) history.replaceState(null, '', viewUrl(me ? 'me' : 'm', room, false));
@@ -2661,50 +2936,65 @@ async function initMobile(me){
   store.on(renderMobile);
   await store.connect();
   document.title = (me ? '自分用｜' : '') + '問題表示';
+  $('#mKind').textContent = me ? '自分用' : '';
   if(me){ $('#mBar').classList.remove('hidden'); $('#mStockSet').onclick = openStockSetting; $('#mSend').onclick = sendQueue; }
   $('#mobile').addEventListener('click', e => {
-    const b = e.target.closest('[data-save]'); if(b) toggleSave(+b.dataset.save);
+    const b = e.target.closest('[data-save]'); if(b) toggleSave(b.dataset.save);
   });
+  $('#mNew').onclick = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  window.addEventListener('scroll', () => { if(window.scrollY < 80) $('#mNew').classList.add('hidden'); }, { passive: true });
 }
-function mCard(s, i, latest){
-  const q = s.qs[i]; if(!q) return '';
-  const an = s.ann['q' + i] || { q:[], a:[] };
+function mCard(s, e, latest){
+  if(!e) return '';
   const showA = !latest || s.showAns;
-  const key = IS_ME ? stockKey(s, i) : '';
+  const key = IS_ME ? stockKey(e) : '';
   const queued = IS_ME && stockQueue().some(x => x.k === key), sent = IS_ME && savedSet().has(key);
   return `<div class="m-card ${latest ? 'latest' : ''}">
-    <div class="top"><span class="no">第${esc(q.no)}問</span>${latest ? '<span class="tag">いま読んだ問題</span>' : ''}</div>
-    <div class="q qtext">${renderText(q.q, an.q, { links:true, linkMark:true })}</div>
-    ${showA ? `<div class="a"><span class="k">答</span>${renderText(q.a, an.a, { links:true, linkMark:true })}</div>${q.alt ? `<div class="alt">別解：${esc(q.alt)}</div>` : ''}${IS_ME && q.note ? `<div class="note">${esc(q.note)}</div>` : ''}` : '<div class="a muted small">（答えはまだ表示されていません）</div>'}
-    ${IS_ME ? `<div class="save"><button data-save="${i}" class="${queued || sent ? 'done' : ''}">${sent ? '✓ ストックに送信済み' : queued ? '✓ 保存リストに入れました' : '早押しストックに保存'}</button></div>` : ''}
+    <div class="top"><span class="no">第${esc(e.no)}問</span>${latest ? '<span class="tag">いま読んだ問題</span>' : ''}</div>
+    <div class="q qtext">${renderText(e.q, e.ann.q, { links:true, linkMark:true })}</div>
+    ${showA ? `<div class="a"><span class="k">答</span>${renderText(e.a, e.ann.a, { links:true, linkMark:true })}</div>${e.alt ? `<div class="alt">別解：${esc(e.alt)}</div>` : ''}${IS_ME && e.note ? `<div class="note">${esc(e.note)}</div>` : ''}` : '<div class="a muted small">（答えはまだ表示されていません）</div>'}
+    ${IS_ME ? `<div class="save"><button data-save="${esc(e.lid)}" class="${queued || sent ? 'done' : ''}">${sent ? '✓ ストックに送信済み' : queued ? '✓ 保存リストに入れました' : '早押しストックに保存'}</button></div>` : ''}
   </div>`;
 }
 function renderMobile(s){
   const st = store.status();
   $('#mConn').textContent = st === 'online' ? '接続中' : st === 'offline' ? 'オフライン' : '未接続';
   $('#mConn').className = 'pill ' + (st === 'online' ? 'on' : 'off');
-  $('#mTitle').textContent = (IS_ME ? '【自分用】' : '') + (s.meta.name || '問題表示');
-  $('#mLatest').innerHTML = s.qs[s.shown] ? mCard(s, s.shown, true) : '<div class="m-card muted">まだ問題が読まれていません。</div>';
-  const hist = s.hist.filter(i => i !== s.shown).slice().reverse();
-  $('#mHistHead').textContent = hist.length ? `これまでの問題（${hist.length}問）` : '';
-  $('#mHist').innerHTML = hist.map(i => mCard(s, i, false)).join('');
+  const latest = shownEntry(s);
+  $('#mTitle').textContent = (latest ? latest.set : s.meta.name) || '問題表示';
+  $('#mLatest').innerHTML = latest ? mCard(s, latest, true) : `<div class="m-card empty">${s.log.length ? '次の問題を待っています…' : 'まだ問題が読まれていません。<br>読まれると、ここに表示されます。'}</div>`;
+  // これまでの問題：新しい順・問題集ごとに見出し
+  const hist = s.log.filter(e => e.lid !== s.shown).reverse().slice(0, 400);
+  let html = '', prevSet = null;
+  hist.forEach(e => {
+    const k = (e.setId || '') + '|' + (e.set || '');
+    if(k !== prevSet){
+      const n = hist.filter(x => (x.setId || '') + '|' + (x.set || '') === k).length;
+      html += `<div class="m-sec">${prevSet === null ? 'これまでの問題・' : ''}<b>${esc(e.set || '無題')}</b>（${n}問）</div>`;
+      prevSet = k;
+    }
+    html += mCard(s, liveEntry(s, e), false);
+  });
+  $('#mHist').innerHTML = html;
+  document.documentElement.style.setProperty('--mh', $('.m-head').offsetHeight + 'px');
+  // 下の方を見ているときに新しい問題が来たらお知らせ
+  if(latest && latest.lid !== lastLatest){ if(lastLatest && window.scrollY > 200) $('#mNew').classList.remove('hidden'); lastLatest = latest.lid; }
   if(IS_ME){ const n = stockQueue().length; $('#mSend').textContent = n ? `早押しストックへ送る（${n}問）` : '早押しストックへ送る'; $('#mSend').disabled = !n; }
 }
 
 /* ---------- ④ 早押しストックへの保存 ---------- */
-function stockKey(s, i){ const q = s.qs[i]; return (s.meta.name || '') + '|' + q.no + '|' + q.q.slice(0, 30); }
+function stockKey(e){ return (e.set || '') + '|' + e.no + '|' + String(e.q).slice(0, 30); }
 function savedSet(){ return new Set(LS.get('qd:saved', [])); }
 function markSaved(key){ const a = LS.get('qd:saved', []); if(!a.includes(key)){ a.push(key); LS.set('qd:saved', a.slice(-3000)); } }
 function stockUrl(){ return LS.get('qd:stockUrl', '') || STOCK_URL; }
 function stockQueue(){ return LS.get('qd:stockQueue', []); }
-function stockItem(s, i){
-  const q = s.qs[i];
-  return { k: stockKey(s, i), q: q.q, a: q.a, alt: q.alt || '', note: q.note || '', no: q.no, set: s.meta.name || '' };
+function stockItem(e){
+  return { k: stockKey(e), q: e.q, a: e.a, alt: e.alt || '', note: e.note || '', no: e.no, set: e.set || '' };
 }
 // 保存ボタン：まずこのスマホの「保存リスト」に入れる（もう一度押すと取り消し）
-function toggleSave(i){
-  const s = store.s; if(!s.qs[i]) return;
-  const it = stockItem(s, i);
+function toggleSave(lid){
+  const s = store.s, e = liveEntry(s, s.log.find(x => x.lid === lid)); if(!e) return;
+  const it = stockItem(e);
   if(savedSet().has(it.k)){ toast('この問題は送信済みです'); return; }
   let qu = stockQueue();
   const has = qu.some(x => x.k === it.k);
@@ -2730,7 +3020,7 @@ async function sendQueue(){
       <button id="sqDone">追加できた（保存リストを空にする）</button>
       <button class="ghost" id="sqClose">閉じる</button>
     </div>
-    <p class="muted small">「復習：${esc(store.s.meta.name || '無題')}」タグ付きの問題として追加されます。</p>`, 'sm');
+    <p class="muted small">「復習：（問題集名）」タグ付きの問題として追加されます。</p>`, 'sm');
   m.querySelector('#sqCode').onclick = e => e.target.select();
   m.querySelector('#sqCopy').onclick = () => navigator.clipboard.writeText(code).then(() => toast('コピーしました'), () => { m.querySelector('#sqCode').select(); });
   m.querySelector('#sqClose').onclick = closeModal;
